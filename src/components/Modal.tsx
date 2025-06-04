@@ -8,20 +8,20 @@ interface ModalProps {
 }
 
 export const Modal = ({ children }: ModalProps) => {
-  const { isOpenModal, closeModal } = useModal();
+  const { openModal, closeModal } = useModal();
 
-  if (!isOpenModal) return null;
+  if (!openModal) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-40 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65"
       onClick={closeModal}
       aria-modal="true"
       role="dialog"
       tabIndex={-1}
     >
       <div
-        className="bg-white rounded-lg shadow-lg p-6 relative"
+        className="bg-white rounded-lg p-6 relative"
         onClick={(e) => e.stopPropagation()} 
       >
         {children}
