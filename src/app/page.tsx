@@ -12,19 +12,19 @@ export default function DashboardPage() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchConsultations = async () => {
-      try {
-        const response = await fetch('/api/consultations');
-        const data = await response.json();
-        setConsultations(data);
-      } catch (error) {
-        console.error('Erro ao buscar consultas:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchConsultations = async () => {
+    try {
+      const response = await fetch('/api/consultations');
+      const data = await response.json();
+      setConsultations(data);
+    } catch (error) {
+      console.error('Erro ao buscar consultas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchConsultations();
   }, []);
 
@@ -34,7 +34,7 @@ export default function DashboardPage() {
         <h1 className="text-lg font-semibold">Painel de Consultas</h1>
         <div className="flex space-x-4">
           <button
-            onClick={openModal}
+            onClick={() => openModal('add')}
             className="bg-white text-teal-600 hover:bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer"
           >
             + Adicionar consulta
@@ -46,7 +46,11 @@ export default function DashboardPage() {
       </header>
 
       <main className="flex-1 px-6 py-4">
-        <ConsultationTable consultations={consultations} loading={loading} />
+        <ConsultationTable
+          consultations={consultations}
+          loading={loading}
+          onDelete={fetchConsultations}
+        />
       </main>
 
       <footer className="bg-[#1E1E1E] text-center text-sm text-gray-400 py-3">

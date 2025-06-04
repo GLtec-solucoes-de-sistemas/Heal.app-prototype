@@ -11,7 +11,7 @@ interface ModalAddMedicalConsultationProps {
 }
 
 export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedicalConsultationProps) => {
-  const { isOpenModal, closeModal } = useModal();
+  const { modalType, closeModal } = useModal();
   const { register, handleSubmit, reset } = useForm<Consultation>();
 
   const onSubmit: SubmitHandler<Consultation> = async (data) => {
@@ -43,7 +43,7 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
     }
   };
 
-  if (!isOpenModal) return null;
+  if (modalType !== 'add') return null;
 
   return (
     <Modal>
@@ -77,7 +77,7 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="consultationType" className="mb-1 text-black">Tipo de Consulta</label>
+              <label htmlFor="consultationType" className="mb-1 text-black">Tipo de consulta</label>
               <input
                 id="consultationType"
                 {...register('consultationType', { required: true })}
