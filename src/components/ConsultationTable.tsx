@@ -1,99 +1,5 @@
 import { ConsultationActions } from './ConsultationActions';
-
-type Consultation = {
-  id: string;
-  date: string;
-  time: string;
-  patient: string;
-  status: 'Atendido' | 'Em andamento' | 'Cancelado';
-};
-
-const data: Consultation[] = [
-  {
-    id: '1',
-    date: '29/05/2025',
-    time: '12:30',
-    patient: 'João',
-    status: 'Atendido',
-  },
-  {
-    id: '2',
-    date: '29/05/2025',
-    time: '13:00',
-    patient: 'Maria',
-    status: 'Cancelado',
-  },
-  {
-    id: '3',
-    date: '30/05/2025',
-    time: '09:00',
-    patient: 'Carlos',
-    status: 'Em andamento',
-  },
-  {
-    id: '4',
-    date: '30/05/2025',
-    time: '10:15',
-    patient: 'Fernanda',
-    status: 'Atendido',
-  },
-  {
-    id: '5',
-    date: '30/05/2025',
-    time: '11:45',
-    patient: 'Bruno',
-    status: 'Cancelado',
-  },
-  {
-    id: '6',
-    date: '31/05/2025',
-    time: '08:00',
-    patient: 'Paula',
-    status: 'Atendido',
-  },
-  {
-    id: '7',
-    date: '31/05/2025',
-    time: '08:30',
-    patient: 'Ricardo',
-    status: 'Em andamento',
-  },
-  {
-    id: '8',
-    date: '31/05/2025',
-    time: '09:15',
-    patient: 'Juliana',
-    status: 'Cancelado',
-  },
-  {
-    id: '9',
-    date: '01/06/2025',
-    time: '14:00',
-    patient: 'Lucas',
-    status: 'Atendido',
-  },
-  {
-    id: '10',
-    date: '01/06/2025',
-    time: '15:30',
-    patient: 'Beatriz',
-    status: 'Em andamento',
-  },
-  {
-    id: '11',
-    date: '01/06/2025',
-    time: '16:00',
-    patient: 'Roberta',
-    status: 'Atendido',
-  },
-  {
-    id: '12',
-    date: '01/06/2025',
-    time: '17:00',
-    patient: 'Eduardo',
-    status: 'Cancelado',
-  },
-];
+import { Consultation } from '@/app/api/consultations/route';
 
 const statusStyles: Record<Consultation['status'], string> = {
   Atendido: 'bg-emerald-600/10 text-emerald-400',
@@ -101,39 +7,54 @@ const statusStyles: Record<Consultation['status'], string> = {
   Cancelado: 'bg-red-500/10 text-red-400',
 };
 
-export const ConsultationTable = () => {
+type ConsultationTableProps = {
+  consultations: Consultation[];
+  loading: boolean;
+};
+
+export const ConsultationTable = ({ consultations, loading }: ConsultationTableProps) => {
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow">
-      <table className="min-w-full table-auto border-collapse text-sm text-white">
-        <thead className="bg-[#2A2A2A] text-gray-300">
-          <tr>
-            <th className="px-4 py-2 text-left">Data</th>
-            <th className="px-4 py-2 text-left">Horário</th>
-            <th className="px-4 py-2 text-left">Paciente</th>
-            <th className="px-4 py-2 text-left">Status</th>
-            <th className="px-4 py-2 text-left">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(({ id, date, time, patient, status }) => (
-            <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
-              <td className="px-4 py-2">{date}</td>
-              <td className="px-4 py-2">{time}</td>
-              <td className="px-4 py-2">{patient}</td>
-              <td className="px-4 py-2">
-                <span
-                  className={`min-w-[110px] px-2 py-1 rounded-2xl text-xs font-medium inline-block ${statusStyles[status]}`}
-                >
-                  {status}
-                </span>
-              </td>
-              <td className="px-4 py-2">
-                <ConsultationActions id={id} />
-              </td>
+      {loading ? (
+        <p className="text-white p-4">Carregando consultas...</p>
+      ) : (
+        <table className="min-w-full table-auto border-collapse text-sm text-white">
+          <thead className="bg-[#2A2A2A] text-gray-300">
+            <tr>
+              <th className="px-4 py-2 text-left">Paciente</th>
+              <th className="px-4 py-2 text-left">CPF</th>
+              <th className="px-4 py-2 text-left">Telefone</th>
+              <th className="px-4 py-2 text-left">Data</th>
+              <th className="px-4 py-2 text-left">Horário</th>
+              <th className="px-4 py-2 text-left">Status</th>
+              <th className="px-4 py-2 text-left">Ações</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {consultations.map(({ id, date, time, name, status, cpf, phone }) => (
+              <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
+                <td className="px-4 py-2">{name}</td>
+                <td className="px-4 py-2">{cpf}</td>
+                <td className="px-4 py-2">
+                  {phone ? phone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : phone}
+                </td>
+                <td className="px-4 py-2">{new Date(date).toLocaleDateString('pt-BR')}</td>
+                <td className="px-4 py-2">{time}</td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`min-w-[110px] text-center px-2 py-1 rounded-2xl text-xs font-medium inline-block ${statusStyles[status]}`}
+                  >
+                    {status}
+                  </span>
+                </td>
+                <td className="px-4 py-2">
+                  <ConsultationActions id={id} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
