@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 type FormData = {
   email: string;
@@ -15,7 +18,10 @@ export const LoginForm = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
+
   const [showPassword, setShowPassword] = useState(false);
+
+  const router = useRouter();
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -23,22 +29,16 @@ export const LoginForm = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      });
+      const { user } = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
 
-      const result = await response.json();
+      const idToken = await user.getIdToken(true);
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro no login');
-      }
-
-      console.log('Usuário autenticado:', result);
+      router.push('/');
+      return idToken;
     } catch (err) {
       if (err instanceof Error) {
         console.error('Erro ao fazer login:', err.message);

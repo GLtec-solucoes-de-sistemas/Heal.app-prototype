@@ -1,5 +1,5 @@
-import { useModal } from "@/context/modal/useModal";
-import { Modal } from "../Modal";
+import { useModal } from "@/contexts/ModalContext";
+import { Modal } from '../Modal';
 
 interface ModalCancelProps {
   text: string;
@@ -33,7 +33,8 @@ export function ConfirmModal({
             disabled={isLoading}
             className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
           >
-            {text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()} consulta
+            {text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}{' '}
+            consulta
           </button>
         </div>
       </div>

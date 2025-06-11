@@ -1,41 +1,44 @@
-import { useModal } from "@/context/modal/useModal";
-import { Pencil, Trash } from "lucide-react";
-import { useState } from "react";
-import { ConfirmModal } from "./modals/ConfirmModal";
+import { useModal } from '@/contexts/modal/useModal';
+import { Pencil, Trash } from 'lucide-react';
+import { useState } from 'react';
+import { ConfirmModal } from './modals/ConfirmModal';
 
 type ConsultationActionsProps = {
   id: string;
   onDelete?: () => void;
 };
 
-export const ConsultationActions = ({ id, onDelete }: ConsultationActionsProps) => {
+export const ConsultationActions = ({
+  id,
+  onDelete,
+}: ConsultationActionsProps) => {
   const { modalType, openModal, closeModal } = useModal();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDeleteConsultation = async () => {
-  setIsLoading(true);
-  try {
-    const response = await fetch('/api/consultations', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id }),
-    });
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/consultations', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao deletar consulta');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao deletar consulta');
+      }
+
+      closeModal();
+      onDelete?.();
+    } catch (error) {
+      console.error('Erro ao deletar consulta:', error);
+    } finally {
+      setIsLoading(false);
     }
-
-    closeModal();
-    onDelete?.();
-  } catch (error) {
-    console.error('Erro ao deletar consulta:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   return (
     <>

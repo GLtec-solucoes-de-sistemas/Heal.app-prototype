@@ -3,14 +3,16 @@
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Modal } from '../Modal';
-import { useModal } from '@/context/modal/useModal';
+import { useModal } from '@/contexts/modal/useModal';
 import { Consultation } from '@/app/api/consultations/route';
 
 interface ModalAddMedicalConsultationProps {
   setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
 }
 
-export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedicalConsultationProps) => {
+export const ModalAddMedicalConsultation = ({
+  setConsultations,
+}: ModalAddMedicalConsultationProps) => {
   const { modalType, closeModal } = useModal();
   const { register, handleSubmit, reset } = useForm<Consultation>();
 
@@ -47,14 +49,20 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
 
   return (
     <Modal>
-      <h2 className="text-black text-center text-xl font-semibold mb-2">Cadastro de paciente</h2>
-      <span className="text-black flex justify-center mb-4">Adicione as informações do paciente para adiciona-lo na lista.</span>
+      <h2 className="text-black text-center text-xl font-semibold mb-2">
+        Cadastro de paciente
+      </h2>
+      <span className="text-black flex justify-center mb-4">
+        Adicione as informações do paciente para adiciona-lo na lista.
+      </span>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
-              <label htmlFor="cpf" className="mb-1 text-black">CPF</label>
+              <label htmlFor="cpf" className="mb-1 text-black">
+                CPF
+              </label>
               <input
                 id="cpf"
                 {...register('cpf', { required: true })}
@@ -65,7 +73,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="email" className="mb-1 text-black">Email</label>
+              <label htmlFor="email" className="mb-1 text-black">
+                Email
+              </label>
               <input
                 id="email"
                 type="email"
@@ -77,7 +87,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="consultationType" className="mb-1 text-black">Tipo de consulta</label>
+              <label htmlFor="consultationType" className="mb-1 text-black">
+                Tipo de consulta
+              </label>
               <input
                 id="consultationType"
                 {...register('consultationType', { required: true })}
@@ -88,7 +100,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="date" className="mb-1 text-black">Data</label>
+              <label htmlFor="date" className="mb-1 text-black">
+                Data
+              </label>
               <input
                 id="date"
                 type="date"
@@ -101,7 +115,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="mb-1 text-black">Nome do paciente</label>
+              <label htmlFor="name" className="mb-1 text-black">
+                Nome do paciente
+              </label>
               <input
                 id="name"
                 {...register('name', { required: true })}
@@ -112,7 +128,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="phone" className="mb-1 text-black">Telefone</label>
+              <label htmlFor="phone" className="mb-1 text-black">
+                Telefone
+              </label>
               <input
                 id="phone"
                 type="tel"
@@ -124,7 +142,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="professional" className="mb-1 text-black">Profissional</label>
+              <label htmlFor="professional" className="mb-1 text-black">
+                Profissional
+              </label>
               <input
                 id="professional"
                 {...register('professional', { required: true })}
@@ -135,7 +155,9 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
             </div>
 
             <div>
-              <label htmlFor="time" className="mb-1 text-black">Horário</label>
+              <label htmlFor="time" className="mb-1 text-black">
+                Horário
+              </label>
               <input
                 id="time"
                 type="time"
@@ -154,13 +176,13 @@ export const ModalAddMedicalConsultation = ({ setConsultations}: ModalAddMedical
               reset();
               closeModal();
             }}
-            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400"
+            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700"
+            className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
           >
             Cadastrar
           </button>

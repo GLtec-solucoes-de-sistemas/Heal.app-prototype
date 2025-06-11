@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ReactNode } from 'react';
-import { useModal } from '@/context/modal/useModal';
+import { useModal } from '@/contexts/ModalContext';
 
 interface ModalProps {
   children: ReactNode;
@@ -22,7 +22,7 @@ export const Modal = ({ children }: ModalProps) => {
     >
       <div
         className="bg-white rounded-lg p-6 relative"
-        onClick={(e) => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>

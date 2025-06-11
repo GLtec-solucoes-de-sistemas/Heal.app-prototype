@@ -13,8 +13,11 @@ type ConsultationTableProps = {
   onDelete?: () => void;
 };
 
-export const ConsultationTable = ({ consultations, loading, onDelete }: ConsultationTableProps) => {
-
+export const ConsultationTable = ({
+  consultations,
+  loading,
+  onDelete,
+}: ConsultationTableProps) => {
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow">
       {loading ? (
@@ -34,28 +37,34 @@ export const ConsultationTable = ({ consultations, loading, onDelete }: Consulta
             </tr>
           </thead>
           <tbody>
-            {consultations.map(({ name, cpf, professional, phone, date, time, status, id }) => (
-              <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
-                <td className="px-4 py-2 text-center">{name}</td>
-                <td className="px-4 py-2 text-center">{cpf}</td>
-                <td className="px-4 py-2 text-center">{professional}</td>
-                <td className="px-4 py-2 text-center">
-                  {phone ? phone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : phone}
-                </td>
-                <td className="px-4 py-2 text-center">{new Date(date).toLocaleDateString('pt-BR')}</td>
-                <td className="px-4 py-2 text-center">{time}</td>
-                <td className="px-4 py-2 text-center">
-                  <span
-                    className={`min-w-[110px] text-center px-2 py-1 rounded-2xl text-xs font-medium inline-block ${statusStyles[status]}`}
-                  >
-                    {status}
-                  </span>
-                </td>
-                <td className="text-center px-4 py-2">
-                  <ConsultationActions id={id} onDelete={onDelete}/>
-                </td>
-              </tr>
-            ))}
+            {consultations.map(
+              ({ name, cpf, professional, phone, date, time, status, id }) => (
+                <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
+                  <td className="px-4 py-2 text-center">{name}</td>
+                  <td className="px-4 py-2 text-center">{cpf}</td>
+                  <td className="px-4 py-2 text-center">{professional}</td>
+                  <td className="px-4 py-2 text-center">
+                    {phone
+                      ? phone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
+                      : phone}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {new Date(date).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td className="px-4 py-2 text-center">{time}</td>
+                  <td className="px-4 py-2 text-center">
+                    <span
+                      className={`min-w-[110px] text-center px-2 py-1 rounded-2xl text-xs font-medium inline-block ${statusStyles[status]}`}
+                    >
+                      {status}
+                    </span>
+                  </td>
+                  <td className="text-center px-4 py-2">
+                    <ConsultationActions id={id} onDelete={onDelete} />
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       )}
