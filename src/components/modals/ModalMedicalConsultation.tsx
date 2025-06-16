@@ -3,7 +3,7 @@
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Modal } from '../Modal';
-import { useModal } from '@/contexts/modal/useModal';
+import { useModal } from '@/contexts/ModalContext';
 import { Consultation } from '@/app/api/consultations/route';
 
 interface ModalAddMedicalConsultationProps {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConsultationTable } from '@/components/ConsultationTable';
 import { ModalAddMedicalConsultation } from '@/components/modals/ModalMedicalConsultation';
-import { useModal } from '@/contexts/modal/useModal';
+import { useModal } from '@/contexts/ModalContext';
 import { Consultation } from './api/consultations/route';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 

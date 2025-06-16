@@ -1,4 +1,4 @@
-import { useModal } from '@/contexts/modal/useModal';
+import { useModal } from '@/contexts/ModalContext';
 import { Pencil, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmModal } from './modals/ConfirmModal';
