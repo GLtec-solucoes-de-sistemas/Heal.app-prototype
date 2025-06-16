@@ -1,4 +1,4 @@
-import { useModal } from "@/contexts/ModalContext";
+import { useModal } from '@/contexts/ModalContext';
 import { Modal } from '../Modal';
 
 interface ModalCancelProps {

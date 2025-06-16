@@ -4,36 +4,44 @@ import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Modal } from '../Modal';
 import { useModal } from '@/contexts/ModalContext';
-import { Consultation } from '@/app/api/consultations/route';
+import { Consultation } from '@/models/consultation';
 
 interface ModalAddMedicalConsultationProps {
   setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
 }
 
+type ConsultationFormData = Omit<
+  Consultation,
+  'id' | 'consultationDate' | 'status'
+> & {
+  date: string;
+  time: string;
+};
+
 export const ModalAddMedicalConsultation = ({
   setConsultations,
 }: ModalAddMedicalConsultationProps) => {
   const { modalType, closeModal } = useModal();
-  const { register, handleSubmit, reset } = useForm<Consultation>();
+  const { register, handleSubmit, reset } = useForm<ConsultationFormData>();
 
-  const onSubmit: SubmitHandler<Consultation> = async (data) => {
+  const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
     try {
+      const { date, time, ...rest } = data;
+      const consultationDate = new Date(`${date}T${time}:00`);
+
       const response = await fetch('/api/consultations', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
-          status: 'Em andamento',
+          ...rest,
+          consultationDate,
+          status: 'Aguardando',
         }),
       });
 
       if (response.ok) {
         const newConsultation = await response.json();
-
         setConsultations((prev) => [newConsultation, ...prev]);
-
         closeModal();
         reset();
       } else {
@@ -53,20 +61,20 @@ export const ModalAddMedicalConsultation = ({
         Cadastro de paciente
       </h2>
       <span className="text-black flex justify-center mb-4">
-        Adicione as informações do paciente para adiciona-lo na lista.
+        Adicione as informações do paciente para adicioná-lo à lista.
       </span>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
-              <label htmlFor="cpf" className="mb-1 text-black">
+              <label htmlFor="document" className="mb-1 text-black">
                 CPF
               </label>
               <input
-                id="cpf"
-                {...register('cpf', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                id="document"
+                {...register('document', { required: true })}
+                className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Digite seu CPF"
                 required
               />
@@ -80,7 +88,7 @@ export const ModalAddMedicalConsultation = ({
                 id="email"
                 type="email"
                 {...register('email', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
                 required
               />
@@ -93,7 +101,7 @@ export const ModalAddMedicalConsultation = ({
               <input
                 id="consultationType"
                 {...register('consultationType', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Tipo de consulta"
                 required
               />
@@ -107,7 +115,7 @@ export const ModalAddMedicalConsultation = ({
                 id="date"
                 type="date"
                 {...register('date', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                className="w-full rounded border px-3 py-2 text-black"
                 required
               />
             </div>
@@ -115,40 +123,40 @@ export const ModalAddMedicalConsultation = ({
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="mb-1 text-black">
+              <label htmlFor="patientName" className="mb-1 text-black">
                 Nome do paciente
               </label>
               <input
-                id="name"
-                {...register('name', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                id="patientName"
+                {...register('patientName', { required: true })}
+                className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="phone" className="mb-1 text-black">
+              <label htmlFor="phoneNumber" className="mb-1 text-black">
                 Telefone
               </label>
               <input
-                id="phone"
+                id="phoneNumber"
                 type="tel"
-                {...register('phone', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                {...register('phoneNumber', { required: true })}
+                className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(XX) XXXXX-XXXX"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="professional" className="mb-1 text-black">
+              <label htmlFor="professionalName" className="mb-1 text-black">
                 Profissional
               </label>
               <input
-                id="professional"
-                {...register('professional', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                id="professionalName"
+                {...register('professionalName', { required: true })}
+                className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
                 required
               />
@@ -162,7 +170,7 @@ export const ModalAddMedicalConsultation = ({
                 id="time"
                 type="time"
                 {...register('time', { required: true })}
-                className="w-full rounded border px-3 py-2 text-black focus:border-teal-600 focus:outline-none"
+                className="w-full rounded border px-3 py-2 text-black"
                 required
               />
             </div>
@@ -176,13 +184,13 @@ export const ModalAddMedicalConsultation = ({
               reset();
               closeModal();
             }}
-            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 cursor-pointer"
+            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
+            className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700"
           >
             Cadastrar
           </button>
