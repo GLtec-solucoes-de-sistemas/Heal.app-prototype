@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -6,9 +6,10 @@ import {
   useEffect,
   useState,
   ReactNode,
-} from 'react';
-import { onAuthStateChanged, User, signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+} from "react";
+import { onAuthStateChanged, User, signOut } from "firebase/auth";
+import { auth } from "../lib/firebase";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       await signOut(auth);
+      router.replace("/login");
     } finally {
       setLoading(false);
     }
@@ -49,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('O hook useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error("O hook useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 }

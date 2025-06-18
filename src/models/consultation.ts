@@ -1,4 +1,8 @@
-export type ConsultationStatus = 'Atendido' | 'Cancelado' | 'Aguardando';
+export type ConsultationStatus =
+  | "Atendido"
+  | "Cancelado"
+  | "Aguardando"
+  | "Confirmação Pendente";
 
 export type Consultation = {
   id: string;

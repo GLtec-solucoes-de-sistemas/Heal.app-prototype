@@ -1,10 +1,11 @@
-import { ConsultationActions } from './ConsultationActions';
-import { Consultation } from '@/models/consultation';
+import { ConsultationActions } from "./ConsultationActions";
+import { Consultation } from "@/models/consultation";
 
-const statusStyles: Record<Consultation['status'], string> = {
-  Atendido: 'bg-emerald-600/10 text-emerald-400',
-  Aguardando: 'bg-yellow-400/10 text-yellow-300',
-  Cancelado: 'bg-red-500/10 text-red-400',
+const statusStyles: Record<Consultation["status"], string> = {
+  Atendido: "bg-emerald-600/10 text-emerald-400",
+  Aguardando: "bg-yellow-400/10 text-yellow-300",
+  Cancelado: "bg-red-500/10 text-red-400",
+  "Confirmação Pendente": "bg-blue-500/10 text-blue-400",
 };
 
 type ConsultationTableProps = {
@@ -26,14 +27,28 @@ export const ConsultationTable = ({
         <table className="min-w-full table-auto border-collapse text-sm text-white">
           <thead className="bg-[#2A2A2A] text-gray-300">
             <tr>
-              <th className="px-4 py-2 text-center">Paciente</th>
-              <th className="px-4 py-2 text-center">CPF</th>
-              <th className="px-4 py-2 text-center">Profissional</th>
-              <th className="px-4 py-2 text-center">Telefone</th>
-              <th className="px-4 py-2 text-center">Data</th>
-              <th className="px-4 py-2 text-center">Horário</th>
-              <th className="px-4 py-2 text-center">Status</th>
-              <th className="px-4 py-2 text-center">Ações</th>
+              <th scope="col" className="px-4 py-2 text-center">
+                Paciente
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
+                CPF
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
+                Profissional
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
+                Telefone
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
+                Data
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
+                Horário
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
+                Status
+              </th>
+              <ConsultationActions isHeader />
             </tr>
           </thead>
           <tbody>
@@ -48,10 +63,10 @@ export const ConsultationTable = ({
                 status,
               }) => {
                 const dateObj = new Date(consultationDate);
-                const formattedDate = dateObj.toLocaleDateString('pt-BR');
-                const formattedTime = dateObj.toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
+                const formattedDate = dateObj.toLocaleDateString("pt-BR");
+                const formattedTime = dateObj.toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
                 });
 
                 return (
@@ -65,9 +80,9 @@ export const ConsultationTable = ({
                       {phoneNumber
                         ? phoneNumber.replace(
                             /^(\d{2})(\d{5})(\d{4})$/,
-                            '($1) $2-$3'
+                            "($1) $2-$3"
                           )
-                        : phoneNumber}
+                        : "–"}
                     </td>
                     <td className="px-4 py-2 text-center">{formattedDate}</td>
                     <td className="px-4 py-2 text-center">{formattedTime}</td>
@@ -78,9 +93,7 @@ export const ConsultationTable = ({
                         {status}
                       </span>
                     </td>
-                    <td className="text-center px-4 py-2">
-                      <ConsultationActions id={id} onDelete={onDelete} />
-                    </td>
+                    <ConsultationActions id={id} onDelete={onDelete} />
                   </tr>
                 );
               }

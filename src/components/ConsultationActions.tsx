@@ -1,69 +1,87 @@
-import { useModal } from '@/contexts/ModalContext';
-import { Pencil, Trash } from 'lucide-react';
-import { useState } from 'react';
-import { ConfirmModal } from './modals/ConfirmModal';
+"use client";
+
+import { Pencil, Trash } from "lucide-react";
+import { useState } from "react";
+import { ConfirmModal } from "./modals/ConfirmModal";
+import { useAuth } from "../contexts/AuthContext";
 
 type ConsultationActionsProps = {
-  id: string;
+  id?: string;
   onDelete?: () => void;
+  isHeader?: boolean;
 };
 
 export const ConsultationActions = ({
   id,
   onDelete,
+  isHeader = false,
 }: ConsultationActionsProps) => {
-  const { modalType, openModal, closeModal } = useModal();
+  const { user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  if (!user || loading) return null;
+
+  if (isHeader) {
+    return (
+      <th scope="col" className="px-4 py-2 text-center">
+        Ações
+      </th>
+    );
+  }
 
   const handleDeleteConsultation = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/consultations', {
-        method: 'DELETE',
+      const response = await fetch("/api/consultations", {
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Erro ao deletar consulta');
+        throw new Error(error.error || "Erro ao deletar consulta");
       }
 
-      closeModal();
+      setShowConfirm(false);
       onDelete?.();
     } catch (error) {
-      console.error('Erro ao deletar consulta:', error);
+      console.error("Erro ao deletar consulta:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <>
+    <td className="px-4 py-2 text-center">
       <div className="flex justify-center gap-3">
         <button
-          onClick={() => console.log('Editar', id)}
+          aria-label="Editar consulta"
+          onClick={() => console.log("Editar consulta:", id)}
           className="text-teal-400 hover:text-teal-300 transition-colors cursor-pointer"
         >
           <Pencil size={16} />
         </button>
         <button
-          onClick={() => openModal('delete')}
+          aria-label="Excluir consulta"
+          onClick={() => setShowConfirm(true)}
           className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
         >
           <Trash size={16} />
         </button>
       </div>
 
-      {modalType === 'delete' && (
+      {showConfirm && (
         <ConfirmModal
           text="desmarcar"
           function={handleDeleteConsultation}
           isLoading={isLoading}
+          onClose={() => setShowConfirm(false)}
         />
       )}
-    </>
+    </td>
   );
 };

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { ReactNode } from 'react';
-import { useModal } from '@/contexts/ModalContext';
+import React, { ReactNode } from "react";
+import { useModal } from "@/contexts/ModalContext";
 
 interface ModalProps {
   children: ReactNode;

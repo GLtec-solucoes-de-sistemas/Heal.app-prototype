@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../lib/firebase";
 
 type FormData = {
   email: string;
@@ -37,13 +37,13 @@ export const LoginForm = () => {
 
       const idToken = await user.getIdToken(true);
 
-      router.push('/');
+      router.push("/");
       return idToken;
     } catch (err) {
       if (err instanceof Error) {
-        console.error('Erro ao fazer login:', err.message);
+        console.error("Erro ao fazer login:", err.message);
       } else {
-        console.error('Erro desconhecido:', err);
+        console.error("Erro desconhecido:", err);
       }
     }
   };
@@ -62,9 +62,9 @@ export const LoginForm = () => {
           <input
             type="email"
             placeholder="E-MAIL"
-            {...register('email', { required: 'E-mail é obrigatório' })}
+            {...register("email", { required: "E-mail é obrigatório" })}
             className={`w-full h-full pl-10 pr-3 py-2 rounded-md bg-[#2A2A2A] text-white border ${
-              errors.email ? 'border-red-500' : 'border-gray-600'
+              errors.email ? "border-red-500" : "border-gray-600"
             } outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-400`}
           />
         </div>
@@ -80,11 +80,11 @@ export const LoginForm = () => {
             size={18}
           />
           <input
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             placeholder="SENHA"
-            {...register('password', { required: 'Senha é obrigatória' })}
+            {...register("password", { required: "Senha é obrigatória" })}
             className={`w-full h-full pl-10 pr-10 py-2 rounded-md bg-[#2A2A2A] text-white border ${
-              errors.password ? 'border-red-500' : 'border-gray-600'
+              errors.password ? "border-red-500" : "border-gray-600"
             } outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-400`}
           />
           <button
