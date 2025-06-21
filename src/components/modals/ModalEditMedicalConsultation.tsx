@@ -5,6 +5,9 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { Modal } from "../Modal";
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation } from "@/models/consultation";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { formatCPF, formatPhone } from "@/utils/formatters";
 
 interface ModalEditMedicalConsultationProps {
   setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
@@ -20,13 +23,38 @@ type ConsultationFormData = Omit<
   time: string;
 };
 
-export function ModalEditMedicalConsultation ({
+const consultationSchema = z.object({
+  document: z
+    .string()
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "Digite um CPF válido"),
+  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
+  consultationType: z.string().min(1, "Tipo de consulta é obrigatório"),
+  date: z.string().min(1, "Data é obrigatória"),
+  patientName: z.string().min(1, "Nome do paciente é obrigatório"),
+  phoneNumber: z
+    .string()
+    .regex(
+      /^\(\d{2}\) \d{4,5}-\d{4}$/,
+      "Telefone deve estar no formato (99) 9 9999-9999"
+    ),
+  professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
+  time: z.string().min(1, "Horário é obrigatório"),
+});
+
+export function ModalEditMedicalConsultation({
   setConsultations,
   selectedConsultation,
 }: ModalEditMedicalConsultationProps) {
   const { modalType, closeModal } = useModal();
-  const { register, handleSubmit, reset, setValue } =
-    useForm<ConsultationFormData>();
+  const {
+  register,
+  handleSubmit,
+  reset,
+  setValue,
+  formState: { errors },
+} = useForm<ConsultationFormData>({
+  resolver: zodResolver(consultationSchema),
+});
 
   useEffect(() => {
     if (selectedConsultation) {
@@ -35,9 +63,9 @@ export function ModalEditMedicalConsultation ({
       const time = dateObj.toTimeString().slice(0, 5);
 
       setValue("patientName", selectedConsultation.patientName);
-      setValue("document", selectedConsultation.document);
+      setValue("document", formatCPF(selectedConsultation.document));
       setValue("email", selectedConsultation.email);
-      setValue("phoneNumber", selectedConsultation.phoneNumber);
+      setValue("phoneNumber", formatPhone(selectedConsultation.phoneNumber));
       setValue("professionalName", selectedConsultation.professionalName);
       setValue("consultationType", selectedConsultation.consultationType);
       setValue("date", date);
@@ -46,44 +74,60 @@ export function ModalEditMedicalConsultation ({
   }, [selectedConsultation, setValue]);
 
   const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (data) => {
-    if (!selectedConsultation) return;
+  if (!selectedConsultation) return;
 
-    try {
-      const { date, time, ...rest } = data;
-      const consultationDate = new Date(`${date}T${time}:00`);
+  try {
+    const { date, time, document, phoneNumber, ...rest } = data;
+    const cleanedCPF = document.replace(/\D/g, "");
+    const cleanedPhone = phoneNumber.replace(/\D/g, "");
+    const consultationDate = new Date(`${date}T${time}:00`);
 
-      const response = await fetch("/api/consultations", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: selectedConsultation.id,
-          ...rest,
-          consultationDate,
-        }),
-      });
+    const response = await fetch("/api/consultations", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedConsultation.id,
+        ...rest,
+        document: cleanedCPF,
+        phoneNumber: cleanedPhone,
+        consultationDate,
+      }),
+    });
 
-      if (response.ok) {
-        const updatedConsultation = {
-          ...selectedConsultation,
-          ...rest,
-          consultationDate: consultationDate.toISOString(),
-        };
+    if (response.ok) {
+      const updatedConsultation = {
+        ...selectedConsultation,
+        ...rest,
+        document: cleanedCPF,
+        phoneNumber: cleanedPhone,
+        consultationDate: consultationDate.toISOString(),
+      };
 
-        setConsultations((prev) =>
-          prev.map((c) =>
-            c.id === selectedConsultation.id ? updatedConsultation : c
-          )
-        );
-        closeModal();
-        reset();
-      } else {
-        const error = await response.json();
-        console.error("Erro:", error.error);
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar consulta:", error);
+      setConsultations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConsultation.id ? updatedConsultation : c,
+        ),
+      );
+      closeModal();
+      reset();
+    } else {
+      const error = await response.json();
+      console.error("Erro:", error.error);
     }
-  };
+  } catch (error) {
+    console.error("Erro ao atualizar consulta:", error);
+  }
+};
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  e.target.value = formatCPF(e.target.value);
+  setValue("document", e.target.value);
+};
+
+const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  e.target.value = formatPhone(e.target.value);
+  setValue("phoneNumber", e.target.value);
+};
 
   if (modalType !== "edit") return null;
 
@@ -96,7 +140,10 @@ export function ModalEditMedicalConsultation ({
         Altere as informações necessárias e salve as alterações.
       </span>
 
-      <form onSubmit={handleSubmit(handleEditConsultation)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(handleEditConsultation)}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
@@ -105,11 +152,14 @@ export function ModalEditMedicalConsultation ({
               </label>
               <input
                 id="document"
-                {...register("document", { required: true })}
+                {...register("document")}
+                onChange={handleCPFChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Digite seu CPF"
-                required
               />
+              {errors.document && (
+  <p className="text-red-600 text-sm mt-1">{errors.document.message}</p>
+)}
             </div>
 
             <div>
@@ -119,11 +169,13 @@ export function ModalEditMedicalConsultation ({
               <input
                 id="email"
                 type="email"
-                {...register("email", { required: true })}
+                {...register("email")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
-                required
               />
+              {errors.email && (
+  <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+)}
             </div>
 
             <div>
@@ -132,11 +184,13 @@ export function ModalEditMedicalConsultation ({
               </label>
               <input
                 id="consultationType"
-                {...register("consultationType", { required: true })}
+                {...register("consultationType")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Tipo de consulta"
-                required
               />
+              {errors.consultationType && (
+  <p className="text-red-600 text-sm mt-1">{errors.consultationType.message}</p>
+)}
             </div>
 
             <div>
@@ -146,10 +200,12 @@ export function ModalEditMedicalConsultation ({
               <input
                 id="date"
                 type="date"
-                {...register("date", { required: true })}
+                {...register("date")}
                 className="w-full rounded border px-3 py-2 text-black"
-                required
               />
+              {errors.date && (
+  <p className="text-red-600 text-sm mt-1">{errors.date.message}</p>
+)}
             </div>
           </div>
 
@@ -160,11 +216,13 @@ export function ModalEditMedicalConsultation ({
               </label>
               <input
                 id="patientName"
-                {...register("patientName", { required: true })}
+                {...register("patientName")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
-                required
               />
+              {errors.patientName && (
+  <p className="text-red-600 text-sm mt-1">{errors.patientName.message}</p>
+)}
             </div>
 
             <div>
@@ -174,11 +232,14 @@ export function ModalEditMedicalConsultation ({
               <input
                 id="phoneNumber"
                 type="tel"
-                {...register("phoneNumber", { required: true })}
+                {...register("phoneNumber")}
+                onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(XX) XXXXX-XXXX"
-                required
               />
+              {errors.phoneNumber && (
+  <p className="text-red-600 text-sm mt-1">{errors.phoneNumber.message}</p>
+)}
             </div>
 
             <div>
@@ -187,11 +248,13 @@ export function ModalEditMedicalConsultation ({
               </label>
               <input
                 id="professionalName"
-                {...register("professionalName", { required: true })}
+                {...register("professionalName")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
-                required
               />
+              {errors.professionalName && (
+  <p className="text-red-600 text-sm mt-1">{errors.professionalName.message}</p>
+)}
             </div>
 
             <div>
@@ -201,10 +264,12 @@ export function ModalEditMedicalConsultation ({
               <input
                 id="time"
                 type="time"
-                {...register("time", { required: true })}
+                {...register("time")}
                 className="w-full rounded border px-3 py-2 text-black"
-                required
               />
+               {errors.time && (
+  <p className="text-red-600 text-sm mt-1">{errors.time.message}</p>
+)}
             </div>
           </div>
         </div>
@@ -230,4 +295,4 @@ export function ModalEditMedicalConsultation ({
       </form>
     </Modal>
   );
-};
+}

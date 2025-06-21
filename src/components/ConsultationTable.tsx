@@ -1,3 +1,4 @@
+import { formatCPF, formatPhone } from "@/utils/formatters";
 import { ConsultationActions } from "./ConsultationActions";
 import { Consultation } from "@/models/consultation";
 
@@ -12,7 +13,9 @@ type ConsultationTableProps = {
   consultations: Consultation[];
   loading: boolean;
   onDelete?: () => void;
-  setSelectedConsultation: React.Dispatch<React.SetStateAction<Consultation | null>>;
+  setSelectedConsultation: React.Dispatch<
+    React.SetStateAction<Consultation | null>
+  >;
   openModal: (type: "add" | "edit" | null) => void;
 };
 
@@ -44,6 +47,9 @@ export const ConsultationTable = ({
                 Telefone
               </th>
               <th scope="col" className="px-4 py-2 text-center">
+                Tipo de Consulta
+              </th>
+              <th scope="col" className="px-4 py-2 text-center">
                 Data
               </th>
               <th scope="col" className="px-4 py-2 text-center">
@@ -62,6 +68,7 @@ export const ConsultationTable = ({
                 patientName,
                 document,
                 professionalName,
+                consultationType,
                 phoneNumber,
                 consultationDate,
                 status,
@@ -76,18 +83,14 @@ export const ConsultationTable = ({
                 return (
                   <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
                     <td className="px-4 py-2 text-center">{patientName}</td>
-                    <td className="px-4 py-2 text-center">{document}</td>
+                    <td className="px-4 py-2 text-center">{formatCPF(document)}</td>
                     <td className="px-4 py-2 text-center">
                       {professionalName}
                     </td>
                     <td className="px-4 py-2 text-center">
-                      {phoneNumber
-                        ? phoneNumber.replace(
-                            /^(\d{2})(\d{5})(\d{4})$/,
-                            "($1) $2-$3"
-                          )
-                        : "–"}
+                      {formatPhone(phoneNumber)}
                     </td>
+                    <td className="px-4 py-2 text-center">{consultationType}</td>
                     <td className="px-4 py-2 text-center">{formattedDate}</td>
                     <td className="px-4 py-2 text-center">{formattedTime}</td>
                     <td className="px-4 py-2 text-center">
@@ -101,7 +104,9 @@ export const ConsultationTable = ({
                       id={id}
                       onDelete={onDelete}
                       onEdit={() => {
-                        const consultation = consultations.find((c) => c.id === id);
+                        const consultation = consultations.find(
+                          (c) => c.id === id,
+                        );
                         if (consultation) {
                           setSelectedConsultation(consultation);
                           openModal("edit");
@@ -110,7 +115,7 @@ export const ConsultationTable = ({
                     />
                   </tr>
                 );
-              }
+              },
             )}
           </tbody>
         </table>
