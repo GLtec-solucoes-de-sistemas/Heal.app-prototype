@@ -2,7 +2,7 @@
 
 import React, { useContext, createContext, useMemo, useState } from "react";
 
-type ModalType = "add" | "delete" | null;
+type ModalType = "add" | "edit" | null;
 
 interface ModalContextData {
   modalType: ModalType;

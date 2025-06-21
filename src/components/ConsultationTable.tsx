@@ -12,12 +12,16 @@ type ConsultationTableProps = {
   consultations: Consultation[];
   loading: boolean;
   onDelete?: () => void;
+  setSelectedConsultation: React.Dispatch<React.SetStateAction<Consultation | null>>;
+  openModal: (type: "add" | "edit" | null) => void;
 };
 
 export const ConsultationTable = ({
   consultations,
   loading,
   onDelete,
+  setSelectedConsultation,
+  openModal,
 }: ConsultationTableProps) => {
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow">
@@ -93,7 +97,17 @@ export const ConsultationTable = ({
                         {status}
                       </span>
                     </td>
-                    <ConsultationActions id={id} onDelete={onDelete} />
+                    <ConsultationActions
+                      id={id}
+                      onDelete={onDelete}
+                      onEdit={() => {
+                        const consultation = consultations.find((c) => c.id === id);
+                        if (consultation) {
+                          setSelectedConsultation(consultation);
+                          openModal("edit");
+                        }
+                      }}
+                    />
                   </tr>
                 );
               }

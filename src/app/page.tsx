@@ -7,13 +7,15 @@ import { ModalAddMedicalConsultation } from "@/components/modals/ModalMedicalCon
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation } from "@/models/consultation";
 import { useRouter } from "next/navigation";
+import { ModalEditMedicalConsultation } from "@/components/modals/EditPatientModal";
 
 export default function DashboardPage() {
-  const { openModal } = useModal();
+  const { openModal, modalType } = useModal();
   const { logout, loading, user } = useAuth();
   const router = useRouter();
 
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const fetchConsultations = async () => {
@@ -70,6 +72,8 @@ export default function DashboardPage() {
           consultations={consultations}
           loading={isLoadingData}
           onDelete={fetchConsultations}
+          setSelectedConsultation={setSelectedConsultation}
+          openModal={openModal}
         />
       </main>
 
@@ -78,6 +82,14 @@ export default function DashboardPage() {
       </footer>
 
       <ModalAddMedicalConsultation setConsultations={setConsultations} />
+
+      {selectedConsultation && modalType === "edit" && (
+        <ModalEditMedicalConsultation
+          selectedConsultation={selectedConsultation}
+          setConsultations={setConsultations}
+          onClose={() => setSelectedConsultation(null)}
+        />
+      )}
     </div>
   );
 }

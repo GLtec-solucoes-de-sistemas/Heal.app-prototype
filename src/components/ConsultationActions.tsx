@@ -8,12 +8,14 @@ import { useAuth } from "../contexts/AuthContext";
 type ConsultationActionsProps = {
   id?: string;
   onDelete?: () => void;
+  onEdit?: () => void;
   isHeader?: boolean;
 };
 
 export const ConsultationActions = ({
   id,
   onDelete,
+  onEdit,
   isHeader = false,
 }: ConsultationActionsProps) => {
   const { user, loading } = useAuth();
@@ -60,7 +62,7 @@ export const ConsultationActions = ({
       <div className="flex justify-center gap-3">
         <button
           aria-label="Editar consulta"
-          onClick={() => console.log("Editar consulta:", id)}
+          onClick={onEdit}
           className="text-teal-400 hover:text-teal-300 transition-colors cursor-pointer"
         >
           <Pencil size={16} />

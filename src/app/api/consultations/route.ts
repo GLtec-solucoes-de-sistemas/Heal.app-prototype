@@ -115,3 +115,42 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updateData } = body;
+
+    if (!id || Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: "ID da consulta ou dados de atualização ausentes." },
+        { status: 400 }
+      );
+    }
+
+    const consultationRef = adminFirestore.collection("consultations").doc(id);
+    const consultationDoc = await consultationRef.get();
+
+    if (!consultationDoc.exists) {
+      return NextResponse.json(
+        { error: "Consulta não encontrada." },
+        { status: 404 }
+      );
+    }
+
+    await consultationRef.update({
+      ...updateData,
+      consultationDate: updateData.consultationDate
+        ? Timestamp.fromDate(new Date(updateData.consultationDate))
+        : undefined,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao atualizar consulta:", error);
+    return NextResponse.json(
+      { error: "Erro ao atualizar consulta" },
+      { status: 500 }
+    );
+  }
+}
