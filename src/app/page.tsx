@@ -7,7 +7,7 @@ import { ModalAddMedicalConsultation } from "@/components/modals/ModalMedicalCon
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation } from "@/models/consultation";
 import { useRouter } from "next/navigation";
-import { ModalEditMedicalConsultation } from "@/components/modals/EditPatientModal";
+import { ModalEditMedicalConsultation } from "@/components/modals/ModalEditMedicalConsultation";
 
 export default function DashboardPage() {
   const { openModal, modalType } = useModal();
@@ -15,7 +15,8 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+  const [selectedConsultation, setSelectedConsultation] =
+    useState<Consultation | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const fetchConsultations = async () => {

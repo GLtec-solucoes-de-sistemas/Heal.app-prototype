@@ -11,7 +11,7 @@ interface ModalContextData {
 }
 
 export const ModalContext = createContext<ModalContextData | undefined>(
-  undefined
+  undefined,
 );
 
 export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
@@ -26,7 +26,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       openModal,
       closeModal,
     }),
-    [modalType]
+    [modalType],
   );
 
   return (
