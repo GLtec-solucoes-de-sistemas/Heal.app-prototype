@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Modal } from "../Modal";
 import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
+import { Consultation, ConsultationStatus } from "@/models/consultation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatCPF, formatPhone } from "@/utils/formatters";
@@ -15,12 +15,10 @@ interface ModalEditMedicalConsultationProps {
   onClose?: () => void;
 }
 
-type ConsultationFormData = Omit<
-  Consultation,
-  "id" | "consultationDate" | "status"
-> & {
+type ConsultationFormData = Omit<Consultation, "id" | "consultationDate"> & {
   date: string;
   time: string;
+  status: ConsultationStatus;
 };
 
 const consultationSchema = z.object({
@@ -35,10 +33,16 @@ const consultationSchema = z.object({
     .string()
     .regex(
       /^\(\d{2}\) \d{4,5}-\d{4}$/,
-      "Telefone deve estar no formato (99) 9 9999-9999"
+      "Telefone deve estar no formato (99) 9 9999-9999",
     ),
   professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
   time: z.string().min(1, "Horário é obrigatório"),
+  status: z.enum([
+    "Atendido",
+    "Cancelado",
+    "Aguardando",
+    "Confirmação Pendente",
+  ]),
 });
 
 export function ModalEditMedicalConsultation({
@@ -47,14 +51,14 @@ export function ModalEditMedicalConsultation({
 }: ModalEditMedicalConsultationProps) {
   const { modalType, closeModal } = useModal();
   const {
-  register,
-  handleSubmit,
-  reset,
-  setValue,
-  formState: { errors },
-} = useForm<ConsultationFormData>({
-  resolver: zodResolver(consultationSchema),
-});
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<ConsultationFormData>({
+    resolver: zodResolver(consultationSchema),
+  });
 
   useEffect(() => {
     if (selectedConsultation) {
@@ -70,64 +74,67 @@ export function ModalEditMedicalConsultation({
       setValue("consultationType", selectedConsultation.consultationType);
       setValue("date", date);
       setValue("time", time);
+      setValue("status", selectedConsultation.status);
     }
   }, [selectedConsultation, setValue]);
 
-  const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (data) => {
-  if (!selectedConsultation) return;
+  const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (
+    data,
+  ) => {
+    if (!selectedConsultation) return;
 
-  try {
-    const { date, time, document, phoneNumber, ...rest } = data;
-    const cleanedCPF = document.replace(/\D/g, "");
-    const cleanedPhone = phoneNumber.replace(/\D/g, "");
-    const consultationDate = new Date(`${date}T${time}:00`);
+    try {
+      const { date, time, document, phoneNumber, ...rest } = data;
+      const cleanedCPF = document.replace(/\D/g, "");
+      const cleanedPhone = phoneNumber.replace(/\D/g, "");
+      const consultationDate = new Date(`${date}T${time}:00`);
 
-    const response = await fetch("/api/consultations", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: selectedConsultation.id,
-        ...rest,
-        document: cleanedCPF,
-        phoneNumber: cleanedPhone,
-        consultationDate,
-      }),
-    });
+      const response = await fetch("/api/consultations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedConsultation.id,
+          ...rest,
+          document: cleanedCPF,
+          phoneNumber: cleanedPhone,
+          consultationDate,
+        }),
+      });
 
-    if (response.ok) {
-      const updatedConsultation = {
-        ...selectedConsultation,
-        ...rest,
-        document: cleanedCPF,
-        phoneNumber: cleanedPhone,
-        consultationDate: consultationDate.toISOString(),
-      };
+      if (response.ok) {
+        const updatedConsultation = {
+          ...selectedConsultation,
+          ...rest,
+          document: cleanedCPF,
+          phoneNumber: cleanedPhone,
+          consultationDate: consultationDate.toISOString(),
+        };
 
-      setConsultations((prev) =>
-        prev.map((c) =>
-          c.id === selectedConsultation.id ? updatedConsultation : c,
-        ),
-      );
-      closeModal();
-      reset();
-    } else {
-      const error = await response.json();
-      console.error("Erro:", error.error);
+        setConsultations((prev) =>
+          prev.map((c) =>
+            c.id === selectedConsultation.id ? updatedConsultation : c,
+          ),
+        );
+        closeModal();
+        reset();
+      } else {
+        const error = await response.json();
+        console.error("Erro:", error.error);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar consulta:", error);
     }
-  } catch (error) {
-    console.error("Erro ao atualizar consulta:", error);
-  }
-};
+  };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  e.target.value = formatCPF(e.target.value);
-  setValue("document", e.target.value);
-};
+    e.target.value = formatCPF(e.target.value);
+    setValue("document", e.target.value);
+  };
 
-const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  e.target.value = formatPhone(e.target.value);
-  setValue("phoneNumber", e.target.value);
-};
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = formatPhone(e.target.value);
+    setValue("phoneNumber", e.target.value);
+  };
 
   if (modalType !== "edit") return null;
 
@@ -158,8 +165,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 placeholder="Digite seu CPF"
               />
               {errors.document && (
-  <p className="text-red-600 text-sm mt-1">{errors.document.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.document.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -174,8 +183,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 placeholder="exemplo@dominio.com"
               />
               {errors.email && (
-  <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -189,8 +200,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 placeholder="Tipo de consulta"
               />
               {errors.consultationType && (
-  <p className="text-red-600 text-sm mt-1">{errors.consultationType.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.consultationType.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -204,8 +217,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.date && (
-  <p className="text-red-600 text-sm mt-1">{errors.date.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.date.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -221,8 +236,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 placeholder="Nome completo"
               />
               {errors.patientName && (
-  <p className="text-red-600 text-sm mt-1">{errors.patientName.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.patientName.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -238,8 +255,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 placeholder="(XX) XXXXX-XXXX"
               />
               {errors.phoneNumber && (
-  <p className="text-red-600 text-sm mt-1">{errors.phoneNumber.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.phoneNumber.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -253,8 +272,10 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 placeholder="Nome do profissional"
               />
               {errors.professionalName && (
-  <p className="text-red-600 text-sm mt-1">{errors.professionalName.message}</p>
-)}
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.professionalName.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -267,11 +288,31 @@ const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 {...register("time")}
                 className="w-full rounded border px-3 py-2 text-black"
               />
-               {errors.time && (
-  <p className="text-red-600 text-sm mt-1">{errors.time.message}</p>
-)}
+              {errors.time && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.time.message}
+                </p>
+              )}
             </div>
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="status" className="mb-1 text-black">
+            Status
+          </label>
+          <select
+            id="status"
+            {...register("status")}
+            className="w-full rounded border px-3 py-3 text-black"
+          >
+            <option value="Atendido">Atendido</option>
+            <option value="Confirmação Pendente">Confirmação Pendente</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+          {errors.status && (
+            <p className="text-red-600 text-sm mt-1">{errors.status.message}</p>
+          )}
         </div>
 
         <div className="flex justify-center space-x-2">

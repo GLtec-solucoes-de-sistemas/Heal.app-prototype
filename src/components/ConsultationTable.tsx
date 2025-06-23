@@ -83,14 +83,18 @@ export const ConsultationTable = ({
                 return (
                   <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
                     <td className="px-4 py-2 text-center">{patientName}</td>
-                    <td className="px-4 py-2 text-center">{formatCPF(document)}</td>
+                    <td className="px-4 py-2 text-center">
+                      {formatCPF(document)}
+                    </td>
                     <td className="px-4 py-2 text-center">
                       {professionalName}
                     </td>
                     <td className="px-4 py-2 text-center">
                       {formatPhone(phoneNumber)}
                     </td>
-                    <td className="px-4 py-2 text-center">{consultationType}</td>
+                    <td className="px-4 py-2 text-center">
+                      {consultationType}
+                    </td>
                     <td className="px-4 py-2 text-center">{formattedDate}</td>
                     <td className="px-4 py-2 text-center">{formattedTime}</td>
                     <td className="px-4 py-2 text-center">
