@@ -1,81 +1,156 @@
-import { NextResponse } from 'next/server';
-
-export type Consultation = {
-  id: string;
-  cpf: string;
-  name: string;
-  email: string;
-  phone: string;
-  consultationType: string;
-  professional: string;
-  date: string;
-  time: string;
-  status: 'Atendido' | 'Em andamento' | 'Cancelado';
-};
-
-const consultations: Consultation[] = [];
+import { NextRequest, NextResponse } from "next/server";
+import { Timestamp } from "firebase-admin/firestore";
+import { adminFirestore } from "@/lib/firebase-admin";
 
 export async function GET() {
-  return NextResponse.json(consultations);
-}
-
-export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const snapshot = await adminFirestore.collection("consultations").get();
 
-    const newConsultation: Consultation = {
-      id: crypto.randomUUID(),
-      ...data,
-    };
+    const consultations = snapshot.docs.map((doc) => {
+      const data = doc.data();
 
-    consultations.push(newConsultation);
+      return {
+        id: doc.id,
+        consultationDate: data.consultationDate?.toDate().toISOString() || null,
+        consultationType: data.consultationType || "",
+        document: data.document || "",
+        email: data.email || "",
+        patientName: data.patientName || "",
+        phoneNumber: data.phoneNumber || "",
+        professionalName: data.professionalName || "",
+        status: data.status || "",
+      };
+    });
 
-    console.log('Consulta cadastrada:', newConsultation);
-
-    return NextResponse.json(newConsultation, { status: 201 });
+    return NextResponse.json(consultations);
   } catch (error) {
-    console.error('Erro ao cadastrar consulta:', error);
+    console.error("Erro ao buscar consultas:", error);
     return NextResponse.json(
-      { error: 'Erro ao processar os dados' },
-      { status: 500 }
+      { error: "Erro ao buscar dados" },
+      { status: 500 },
     );
   }
 }
 
-export async function DELETE(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id } = body;
+
+    const {
+      consultationDate,
+      consultationType,
+      document,
+      email,
+      patientName,
+      phoneNumber,
+      professionalName,
+      status = "Confirmação Pendente",
+    } = body;
+
+    if (
+      !consultationDate ||
+      !consultationType ||
+      !document ||
+      !email ||
+      !patientName ||
+      !phoneNumber ||
+      !professionalName
+    ) {
+      return NextResponse.json(
+        { error: "Campos obrigatórios ausentes" },
+        { status: 400 },
+      );
+    }
+
+    const consultationRef = await adminFirestore
+      .collection("consultations")
+      .add({
+        consultationDate: Timestamp.fromDate(new Date(consultationDate)),
+        consultationType,
+        document,
+        email,
+        patientName,
+        phoneNumber,
+        professionalName,
+        status,
+      });
+
+    const createdDoc = await consultationRef.get();
+    const createdData = createdDoc.data();
+
+    return NextResponse.json({
+      id: createdDoc.id,
+      ...createdData,
+      consultationDate:
+        createdData?.consultationDate?.toDate().toISOString() || null,
+    });
+  } catch (error) {
+    console.error("Erro ao criar consulta:", error);
+    return NextResponse.json(
+      { error: "Erro ao criar consulta" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id } = await req.json();
 
     if (!id) {
       return NextResponse.json(
-        { error: 'ID da consulta não fornecido' },
-        { status: 400 }
+        { error: "ID da consulta não fornecido." },
+        { status: 400 },
       );
     }
 
-    const index = consultations.findIndex((c) => c.id === id);
+    await adminFirestore.collection("consultations").doc(id).delete();
 
-    if (index === -1) {
-      return NextResponse.json(
-        { error: 'Consulta não encontrada' },
-        { status: 404 }
-      );
-    }
-
-    consultations.splice(index, 1);
-
-    console.log('Consulta deletada:', id);
-
-    return NextResponse.json(
-      { message: 'Consulta deletada com sucesso' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Erro ao deletar consulta:', error);
+    console.error("Erro ao deletar consulta:", error);
     return NextResponse.json(
-      { error: 'Erro ao deletar consulta' },
-      { status: 500 }
+      { error: "Erro ao deletar consulta" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updateData } = body;
+
+    if (!id || Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: "ID da consulta ou dados de atualização ausentes." },
+        { status: 400 },
+      );
+    }
+
+    const consultationRef = adminFirestore.collection("consultations").doc(id);
+    const consultationDoc = await consultationRef.get();
+
+    if (!consultationDoc.exists) {
+      return NextResponse.json(
+        { error: "Consulta não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    await consultationRef.update({
+      ...updateData,
+      consultationDate: updateData.consultationDate
+        ? Timestamp.fromDate(new Date(updateData.consultationDate))
+        : undefined,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao atualizar consulta:", error);
+    return NextResponse.json(
+      { error: "Erro ao atualizar consulta" },
+      { status: 500 },
     );
   }
 }

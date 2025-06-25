@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoginForm } from '@/components/LoginForm';
-import Image from 'next/image';
-import loginPage from '../../../public/loginPage.svg';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { LoginForm } from "@/components/LoginForm";
+import Image from "next/image";
+import loginPage from "../../../public/loginPage.svg";
 
 const LoginPage = () => {
   const { user, loading } = useAuth();
@@ -13,7 +13,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/');
+      router.replace("/");
     }
   }, [user, loading, router]);
 

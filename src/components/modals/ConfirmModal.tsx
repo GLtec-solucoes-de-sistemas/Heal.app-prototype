@@ -1,16 +1,18 @@
 import { useModal } from "@/contexts/ModalContext";
-import { Modal } from '../Modal';
+import { Modal } from "../Modal";
 
 interface ModalCancelProps {
   text: string;
   function: () => void;
   isLoading: boolean;
+  onClose?: () => void;
 }
 
 export function ConfirmModal({
   text,
   function: handleFunction,
   isLoading,
+  onClose,
 }: ModalCancelProps) {
   const { closeModal } = useModal();
 
@@ -23,17 +25,17 @@ export function ConfirmModal({
 
         <div className="flex justify-center space-x-4">
           <button
-            onClick={closeModal}
-            className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-400"
+            onClick={onClose ?? closeModal}
+            className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-400 cursor-pointer"
           >
             Cancelar
           </button>
           <button
             onClick={handleFunction}
             disabled={isLoading}
-            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 cursor-pointer"
           >
-            {text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}{' '}
+            {text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}{" "}
             consulta
           </button>
         </div>

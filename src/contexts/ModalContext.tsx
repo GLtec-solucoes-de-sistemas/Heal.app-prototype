@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useContext, createContext, useMemo, useState } from 'react';
+import React, { useContext, createContext, useMemo, useState } from "react";
 
-type ModalType = 'add' | 'delete' | null;
+type ModalType = "add" | "edit" | null;
 
 interface ModalContextData {
   modalType: ModalType;
@@ -11,7 +11,7 @@ interface ModalContextData {
 }
 
 export const ModalContext = createContext<ModalContextData | undefined>(
-  undefined
+  undefined,
 );
 
 export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
@@ -26,7 +26,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       openModal,
       closeModal,
     }),
-    [modalType]
+    [modalType],
   );
 
   return (
@@ -38,7 +38,7 @@ export const useModal = () => {
   const context = useContext(ModalContext);
 
   if (!context) {
-    throw new Error('useModal deve ser usado dentro de ModalProvider');
+    throw new Error("useModal deve ser usado dentro de ModalProvider");
   }
 
   return context;

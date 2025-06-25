@@ -2,17 +2,24 @@
 
 import React, { useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "../Modal";
 import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
+import { Consultation, ConsultationStatus } from "@/models/consultation";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { formatCPF, formatPhone } from "@/utils/formatters";
-import { getTodayDate } from "@/utils/date";
 
-interface ModalAddMedicalConsultationProps {
+interface ModalEditMedicalConsultationProps {
   setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
+  selectedConsultation: Consultation | null;
+  onClose?: () => void;
 }
+
+type ConsultationFormData = Omit<Consultation, "id" | "consultationDate"> & {
+  date: string;
+  time: string;
+  status: ConsultationStatus;
+};
 
 const consultationSchema = z.object({
   document: z
@@ -30,18 +37,19 @@ const consultationSchema = z.object({
     ),
   professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
   time: z.string().min(1, "Horário é obrigatório"),
+  status: z.enum([
+    "Atendido",
+    "Cancelado",
+    "Aguardando",
+    "Confirmação Pendente",
+  ]),
 });
 
-type ConsultationFormData = z.infer<typeof consultationSchema> & {
-  date: string;
-  time: string;
-};
-
-export const ModalAddMedicalConsultation = ({
+export function ModalEditMedicalConsultation({
   setConsultations,
-}: ModalAddMedicalConsultationProps) => {
+  selectedConsultation,
+}: ModalEditMedicalConsultationProps) {
   const { modalType, closeModal } = useModal();
-
   const {
     register,
     handleSubmit,
@@ -51,6 +59,72 @@ export const ModalAddMedicalConsultation = ({
   } = useForm<ConsultationFormData>({
     resolver: zodResolver(consultationSchema),
   });
+
+  useEffect(() => {
+    if (selectedConsultation) {
+      const dateObj = new Date(selectedConsultation.consultationDate);
+      const date = dateObj.toISOString().slice(0, 10);
+      const time = dateObj.toTimeString().slice(0, 5);
+
+      setValue("patientName", selectedConsultation.patientName);
+      setValue("document", formatCPF(selectedConsultation.document));
+      setValue("email", selectedConsultation.email);
+      setValue("phoneNumber", formatPhone(selectedConsultation.phoneNumber));
+      setValue("professionalName", selectedConsultation.professionalName);
+      setValue("consultationType", selectedConsultation.consultationType);
+      setValue("date", date);
+      setValue("time", time);
+      setValue("status", selectedConsultation.status);
+    }
+  }, [selectedConsultation, setValue]);
+
+  const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (
+    data,
+  ) => {
+    if (!selectedConsultation) return;
+
+    try {
+      const { date, time, document, phoneNumber, ...rest } = data;
+      const cleanedCPF = document.replace(/\D/g, "");
+      const cleanedPhone = phoneNumber.replace(/\D/g, "");
+      const consultationDate = new Date(`${date}T${time}:00`);
+
+      const response = await fetch("/api/consultations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedConsultation.id,
+          ...rest,
+          document: cleanedCPF,
+          phoneNumber: cleanedPhone,
+          consultationDate,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedConsultation = {
+          ...selectedConsultation,
+          ...rest,
+          document: cleanedCPF,
+          phoneNumber: cleanedPhone,
+          consultationDate: consultationDate.toISOString(),
+        };
+
+        setConsultations((prev) =>
+          prev.map((c) =>
+            c.id === selectedConsultation.id ? updatedConsultation : c,
+          ),
+        );
+        closeModal();
+        reset();
+      } else {
+        const error = await response.json();
+        console.error("Erro:", error.error);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar consulta:", error);
+    }
+  };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
@@ -62,59 +136,21 @@ export const ModalAddMedicalConsultation = ({
     setValue("phoneNumber", e.target.value);
   };
 
-  const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
-    try {
-      const { date, time, document, phoneNumber, ...rest } = data;
-
-      const cleanedCPF = document.replace(/\D/g, "");
-      const cleanedPhone = phoneNumber.replace(/\D/g, "");
-      const consultationDate = new Date(`${date}T${time}:00`);
-
-      const response = await fetch("/api/consultations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...rest,
-          document: cleanedCPF,
-          phoneNumber: cleanedPhone,
-          consultationDate,
-          status: "Confirmação Pendente",
-        }),
-      });
-
-      if (response.ok) {
-        const newConsultation = await response.json();
-        setConsultations((prev) => [newConsultation, ...prev]);
-        closeModal();
-        reset();
-      } else {
-        const error = await response.json();
-        console.error("Erro:", error.error);
-      }
-    } catch (error) {
-      console.error("Erro ao enviar consulta:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (modalType === "add") {
-      setValue("date", getTodayDate());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalType]);
-
-  if (modalType !== "add") return null;
+  if (modalType !== "edit") return null;
 
   return (
     <Modal>
       <h2 className="text-black text-center text-xl font-semibold mb-2">
-        Cadastro de paciente
+        Editar dados do paciente
       </h2>
       <span className="text-black flex justify-center mb-4">
-        Adicione as informações do paciente para adicioná-lo à lista.
+        Altere as informações necessárias e salve as alterações.
       </span>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(handleEditConsultation)}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
@@ -126,7 +162,7 @@ export const ModalAddMedicalConsultation = ({
                 {...register("document")}
                 onChange={handleCPFChange}
                 className="w-full rounded border px-3 py-2 text-black"
-                placeholder="Digite o CPF do paciente"
+                placeholder="Digite seu CPF"
               />
               {errors.document && (
                 <p className="text-red-600 text-sm mt-1">
@@ -216,7 +252,7 @@ export const ModalAddMedicalConsultation = ({
                 {...register("phoneNumber")}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
-                placeholder="(99) 9 9999-9999"
+                placeholder="(XX) XXXXX-XXXX"
               />
               {errors.phoneNumber && (
                 <p className="text-red-600 text-sm mt-1">
@@ -261,6 +297,24 @@ export const ModalAddMedicalConsultation = ({
           </div>
         </div>
 
+        <div>
+          <label htmlFor="status" className="mb-1 text-black">
+            Status
+          </label>
+          <select
+            id="status"
+            {...register("status")}
+            className="w-full rounded border px-3 py-3 text-black"
+          >
+            <option value="Atendido">Atendido</option>
+            <option value="Confirmação Pendente">Confirmação Pendente</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+          {errors.status && (
+            <p className="text-red-600 text-sm mt-1">{errors.status.message}</p>
+          )}
+        </div>
+
         <div className="flex justify-center space-x-2">
           <button
             type="button"
@@ -276,10 +330,10 @@ export const ModalAddMedicalConsultation = ({
             type="submit"
             className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
           >
-            Cadastrar
+            Salvar
           </button>
         </div>
       </form>
     </Modal>
   );
-};
+}
