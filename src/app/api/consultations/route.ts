@@ -79,7 +79,8 @@ export async function POST(req: NextRequest) {
         confirmationToken,
       });
 
-    const whatsappApiUrl = 'http://localhost:3001/send-message';
+    const whatsappApiUrl =
+      'https://whatsapp-messenger-jlld.onrender.com/send-message';
 
     await fetch(whatsappApiUrl, {
       method: 'POST',
