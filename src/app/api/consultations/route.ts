@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       });
 
     const whatsappApiUrl =
-      'https://whatsapp-messenger-jlld.onrender.com/send-message';
+      'https://whatsapp-messenger-wj28.onrender.com/send-message';
 
     await fetch(whatsappApiUrl, {
       method: 'POST',
