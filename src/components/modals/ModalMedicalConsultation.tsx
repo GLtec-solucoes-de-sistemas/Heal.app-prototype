@@ -111,7 +111,7 @@ export const ModalAddMedicalConsultation = ({
           ? 'https://wa.me'
           : 'https://web.whatsapp.com/send';
 
-        const whatsappURL = `${baseUrl}?phone=${cleanedPhone}&text=${whatsappMessage}`;
+        const whatsappURL = `${baseUrl}?phone=55${cleanedPhone}&text=${whatsappMessage}`;
         window.open(whatsappURL, '_blank');
       } else {
         const error = await response.json();
