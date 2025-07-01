@@ -106,8 +106,12 @@ export const ModalAddMedicalConsultation = ({
           `${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`,
         ].join('\n');
 
-        const whatsappURL = `https://wa.me/55${cleanedPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+        const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+        const baseUrl = isMobile
+          ? 'https://wa.me'
+          : 'https://web.whatsapp.com/send';
 
+        const whatsappURL = `${baseUrl}?phone=${cleanedPhone}&text=${whatsappMessage}`;
         window.open(whatsappURL, '_blank');
       } else {
         const error = await response.json();
