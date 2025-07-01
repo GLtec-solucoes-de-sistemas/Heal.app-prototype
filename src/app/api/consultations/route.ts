@@ -79,19 +79,6 @@ export async function POST(req: NextRequest) {
         confirmationToken,
       });
 
-    const whatsappApiUrl =
-      'https://whatsapp-messenger-wj28.onrender.com/send-message';
-
-    await fetch(whatsappApiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: phoneNumber,
-        patientName,
-        confirmationToken,
-      }),
-    });
-
     const createdDoc = await consultationRef.get();
     const createdData = createdDoc.data();
 
@@ -100,6 +87,7 @@ export async function POST(req: NextRequest) {
       ...createdData,
       consultationDate:
         createdData?.consultationDate?.toDate().toISOString() || null,
+      confirmationToken,
     });
   } catch (error) {
     console.error('Erro ao criar consulta:', error);

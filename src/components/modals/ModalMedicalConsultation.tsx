@@ -1,14 +1,16 @@
-"use client";
+'use client';
 
-import React, { useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Modal } from "../Modal";
-import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
-import { formatCPF, formatPhone } from "@/utils/formatters";
-import { getTodayDate } from "@/utils/date";
+import React, { useEffect } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Modal } from '../Modal';
+import { useModal } from '@/contexts/ModalContext';
+import { Consultation } from '@/models/consultation';
+import { formatCPF, formatPhone } from '@/utils/formatters';
+import { getTodayDate } from '@/utils/date';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface ModalAddMedicalConsultationProps {
   setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
@@ -17,19 +19,19 @@ interface ModalAddMedicalConsultationProps {
 const consultationSchema = z.object({
   document: z
     .string()
-    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "Digite um CPF válido"),
-  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
-  consultationType: z.string().min(1, "Tipo de consulta é obrigatório"),
-  date: z.string().min(1, "Data é obrigatória"),
-  patientName: z.string().min(1, "Nome do paciente é obrigatório"),
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Digite um CPF válido'),
+  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  consultationType: z.string().min(1, 'Tipo de consulta é obrigatório'),
+  date: z.string().min(1, 'Data é obrigatória'),
+  patientName: z.string().min(1, 'Nome do paciente é obrigatório'),
   phoneNumber: z
     .string()
     .regex(
       /^\(\d{2}\) \d{4,5}-\d{4}$/,
-      "Telefone deve estar no formato (99) 9 9999-9999",
+      'Telefone deve estar no formato (99) 9 9999-9999'
     ),
-  professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
-  time: z.string().min(1, "Horário é obrigatório"),
+  professionalName: z.string().min(1, 'Nome do profissional é obrigatório'),
+  time: z.string().min(1, 'Horário é obrigatório'),
 });
 
 type ConsultationFormData = z.infer<typeof consultationSchema> & {
@@ -54,56 +56,76 @@ export const ModalAddMedicalConsultation = ({
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
-    setValue("document", e.target.value);
+    setValue('document', e.target.value);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatPhone(e.target.value);
-    setValue("phoneNumber", e.target.value);
+    setValue('phoneNumber', e.target.value);
   };
 
   const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
     try {
       const { date, time, document, phoneNumber, ...rest } = data;
 
-      const cleanedCPF = document.replace(/\D/g, "");
-      const cleanedPhone = phoneNumber.replace(/\D/g, "");
+      const cleanedCPF = document.replace(/\D/g, '');
+      const cleanedPhone = phoneNumber.replace(/\D/g, '');
       const consultationDate = new Date(`${date}T${time}:00`);
 
-      const response = await fetch("/api/consultations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const formattedDate = format(
+        consultationDate,
+        "dd 'de' MMMM 'às' HH:mm",
+        {
+          locale: ptBR,
+        }
+      );
+
+      const response = await fetch('/api/consultations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...rest,
           document: cleanedCPF,
           phoneNumber: cleanedPhone,
           consultationDate,
-          status: "Confirmação Pendente",
+          status: 'Confirmação Pendente',
         }),
       });
 
       if (response.ok) {
         const newConsultation = await response.json();
+        const confirmationToken = newConsultation.confirmationToken;
         setConsultations((prev) => [newConsultation, ...prev]);
         closeModal();
         reset();
+
+        const whatsappMessage = `👋 Olá ${data.patientName}!
+
+        📅 Sua consulta foi agendada para o dia *${formattedDate}*.
+
+        🔗 Por favor, confirme sua presença acessando o link abaixo:
+        ${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`;
+
+        const whatsappURL = `https://wa.me/55${cleanedPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+
+        window.open(whatsappURL, '_blank');
       } else {
         const error = await response.json();
-        console.error("Erro:", error.error);
+        console.error('Erro:', error.error);
       }
     } catch (error) {
-      console.error("Erro ao enviar consulta:", error);
+      console.error('Erro ao enviar consulta:', error);
     }
   };
 
   useEffect(() => {
-    if (modalType === "add") {
-      setValue("date", getTodayDate());
+    if (modalType === 'add') {
+      setValue('date', getTodayDate());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalType]);
 
-  if (modalType !== "add") return null;
+  if (modalType !== 'add') return null;
 
   return (
     <Modal>
@@ -123,7 +145,7 @@ export const ModalAddMedicalConsultation = ({
               </label>
               <input
                 id="document"
-                {...register("document")}
+                {...register('document')}
                 onChange={handleCPFChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Digite o CPF do paciente"
@@ -142,7 +164,7 @@ export const ModalAddMedicalConsultation = ({
               <input
                 id="email"
                 type="email"
-                {...register("email")}
+                {...register('email')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
               />
@@ -159,7 +181,7 @@ export const ModalAddMedicalConsultation = ({
               </label>
               <input
                 id="consultationType"
-                {...register("consultationType")}
+                {...register('consultationType')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Tipo de consulta"
               />
@@ -177,7 +199,7 @@ export const ModalAddMedicalConsultation = ({
               <input
                 id="date"
                 type="date"
-                {...register("date")}
+                {...register('date')}
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.date && (
@@ -195,7 +217,7 @@ export const ModalAddMedicalConsultation = ({
               </label>
               <input
                 id="patientName"
-                {...register("patientName")}
+                {...register('patientName')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
               />
@@ -213,7 +235,7 @@ export const ModalAddMedicalConsultation = ({
               <input
                 id="phoneNumber"
                 type="tel"
-                {...register("phoneNumber")}
+                {...register('phoneNumber')}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(99) 9 9999-9999"
@@ -231,7 +253,7 @@ export const ModalAddMedicalConsultation = ({
               </label>
               <input
                 id="professionalName"
-                {...register("professionalName")}
+                {...register('professionalName')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
               />
@@ -249,7 +271,7 @@ export const ModalAddMedicalConsultation = ({
               <input
                 id="time"
                 type="time"
-                {...register("time")}
+                {...register('time')}
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.time && (
