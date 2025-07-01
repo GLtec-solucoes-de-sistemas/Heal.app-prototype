@@ -100,13 +100,11 @@ export const ModalAddMedicalConsultation = ({
         reset();
 
         const whatsappMessage = [
-          `👋 Olá ${data.patientName}!`,
-          ``,
-          `📅 Sua consulta foi agendada para o dia *${formattedDate}*.`,
-          ``,
-          `🔗 Por favor, confirme sua presença acessando o link abaixo:`,
+          `👋 *Olá ${data.patientName}!*`,
+          `📅 *Consulta:* ${formattedDate}`,
+          `📍 *🔗 Por favor, confirme sua presença acessando o link abaixo:*`,
           `${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`,
-        ].join('\n');
+        ].join(' | ');
 
         const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
         const baseUrl = isMobile
