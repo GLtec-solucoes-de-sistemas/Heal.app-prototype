@@ -99,12 +99,12 @@ export const ModalAddMedicalConsultation = ({
         closeModal();
         reset();
 
-        const whatsappMessage = `👋 Olá ${data.patientName}!
-
-        📅 Sua consulta foi agendada para o dia *${formattedDate}*.
-
-        🔗 Por favor, confirme sua presença acessando o link abaixo:
-        ${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`;
+        const whatsappMessage = [
+          `👋 Olá ${data.patientName}!`,
+          `📅 Sua consulta foi agendada para o dia *${formattedDate}*.`,
+          `🔗 Por favor, confirme sua presença acessando o link abaixo:`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`,
+        ].join('\n');
 
         const whatsappURL = `https://wa.me/55${cleanedPhone}?text=${encodeURIComponent(whatsappMessage)}`;
 
