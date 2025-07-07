@@ -99,24 +99,23 @@ export const ModalAddMedicalConsultation = ({
         closeModal();
         reset();
 
-        const whatsappMessageRaw = [
-          `👋 *Olá ${data.patientName}!*`,
-          `📅 *Consulta:* ${formattedDate}`,
-          `📍 *🔗 Por favor, confirme sua presença acessando o link abaixo:*`,
-          `${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`,
-        ].join('\n\n');
+       const whatsappMessageRaw = [
+         `👋 *Olá ${data.patientName}!*`,
+         `📅 *Consulta:* ${formattedDate}`,
+         `📍Confirme sua presença acessando o link abaixo:`,
+         `${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`,
+       ].join('\n\n');
 
-        const encodedMessage = encodeURIComponent(whatsappMessageRaw);
+       const encodedMessage = encodeURIComponent(whatsappMessageRaw);
 
-        const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+       const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+       const baseUrl = isMobile
+         ? 'https://api.whatsapp.com/send'
+         : 'https://web.whatsapp.com/send';
 
-        const baseUrl = isMobile
-          ? 'https://api.whatsapp.com/send'
-          : 'https://web.whatsapp.com/send';
+       const whatsappURL = `${baseUrl}?phone=55${cleanedPhone}&text=${encodedMessage}`;
 
-        const whatsappURL = `${baseUrl}?phone=55${cleanedPhone}&text=${encodedMessage}`;
-
-        window.open(whatsappURL, '_blank');
+       window.open(whatsappURL, '_blank');
       } else {
         const error = await response.json();
         console.error('Erro:', error.error);
