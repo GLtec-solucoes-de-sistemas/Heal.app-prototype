@@ -99,23 +99,32 @@ export const ModalAddMedicalConsultation = ({
         closeModal();
         reset();
 
-       const whatsappMessageRaw = [
-         `👋 *Olá ${data.patientName}!*`,
-         `📅 *Consulta:* ${formattedDate}`,
-         `📍Confirme sua presença acessando o link abaixo:`,
-         `${process.env.NEXT_PUBLIC_BASE_URL}/confirm/${confirmationToken}`,
-       ].join('\n\n');
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL ||
+          'https://healapp-prototype.netlify.app';
 
-       const encodedMessage = encodeURIComponent(whatsappMessageRaw);
+        const normalizedUrl = baseUrl.startsWith('http')
+          ? baseUrl
+          : `https://${baseUrl}`;
 
-       const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
-       const baseUrl = isMobile
-         ? 'https://api.whatsapp.com/send'
-         : 'https://web.whatsapp.com/send';
+        const whatsappMessageRaw = [
+          `👋 *Olá ${data.patientName}!*`,
+          `📅 *Consulta:* ${formattedDate}`,
+          `📍 Confirme sua presença acessando o link abaixo`,
+          '',
+          `${normalizedUrl}/confirm/${confirmationToken}`,
+        ].join('\n\n');
 
-       const whatsappURL = `${baseUrl}?phone=55${cleanedPhone}&text=${encodedMessage}`;
+        const encodedMessage = encodeURIComponent(whatsappMessageRaw);
 
-       window.open(whatsappURL, '_blank');
+        const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+        const baseUrlWhatsapp = isMobile
+          ? 'https://api.whatsapp.com/send'
+          : 'https://web.whatsapp.com/send';
+
+        const whatsappURL = `${baseUrlWhatsapp}?phone=55${cleanedPhone}&text=${encodedMessage}`;
+
+        window.open(whatsappURL, '_blank');
       } else {
         const error = await response.json();
         console.error('Erro:', error.error);
