@@ -110,8 +110,7 @@ export const ModalAddMedicalConsultation = ({
         const whatsappMessageRaw = [
           `👋 *Olá ${data.patientName}!*`,
           `📅 *Consulta:* ${formattedDate}`,
-          `📍 Confirme sua presença acessando o link abaixo`,
-          '',
+          `📍 Confirme sua presença acessando o link abaixo:`,
           `${normalizedUrl}/confirm/${confirmationToken}`,
         ].join('\n\n');
 
