@@ -1,13 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { ConsultationTable } from "@/components/ConsultationTable";
-import { ModalAddMedicalConsultation } from "@/components/modals/ModalMedicalConsultation";
-import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
-import { useRouter } from "next/navigation";
-import { ModalEditMedicalConsultation } from "@/components/modals/ModalEditMedicalConsultation";
+import { useEffect, useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { ConsultationTable } from '@/components/ConsultationTable';
+import { ModalAddMedicalConsultation } from '@/components/modals/ModalMedicalConsultation';
+import { useModal } from '@/contexts/ModalContext';
+import { Consultation } from '@/models/consultation';
+import { useRouter } from 'next/navigation';
+import { ModalEditMedicalConsultation } from '@/components/modals/ModalEditMedicalConsultation';
+import { ConsultationFilters } from '@/components/ConsultationFilters';
 
 export default function DashboardPage() {
   const { openModal, modalType } = useModal();
@@ -19,14 +20,26 @@ export default function DashboardPage() {
     useState<Consultation | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
+  const [filters, setFilters] = useState({
+    patientName: '',
+    email: '',
+    cpf: '',
+    consultationType: '',
+    professionalName: '',
+    // startDate: new Date().toISOString().split('T')[0],
+    // endDate: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
+  });
+
   const fetchConsultations = async () => {
     try {
-      const response = await fetch("/api/consultations");
-      if (!response.ok) throw new Error("Erro ao buscar consultas");
+      const response = await fetch('/api/consultations');
+      if (!response.ok) throw new Error('Erro ao buscar consultas');
       const data = await response.json();
       setConsultations(data);
     } catch (error) {
-      console.error("Erro ao buscar consultas:", error);
+      console.error('Erro ao buscar consultas:', error);
     } finally {
       setIsLoadingData(false);
     }
@@ -36,6 +49,68 @@ export default function DashboardPage() {
     fetchConsultations();
   }, []);
 
+  const filteredConsultations = useMemo(() => {
+    return consultations.filter((consultation) => {
+      const matchesName = filters.patientName
+        ? consultation.patientName
+            .toLowerCase()
+            .includes(filters.patientName.toLowerCase())
+        : true;
+
+      const matchesCpf = filters.cpf
+        ? consultation.document
+            .replace(/\D/g, '')
+            .includes(filters.cpf.replace(/\D/g, ''))
+        : true;
+
+      const matchesDate = (() => {
+        if (!filters.startDate && !filters.endDate) {
+          return true;
+        }
+
+        if (filters.startDate && !filters.endDate) {
+          return consultation.consultationDate >= filters.startDate;
+        }
+
+        if (!filters.startDate && filters.endDate) {
+          return consultation.consultationDate <= filters.endDate;
+        }
+
+        return (
+          consultation.consultationDate >= filters.startDate &&
+          consultation.consultationDate <= filters.endDate
+        );
+      })();
+
+      const matchesEmail = filters.email
+        ? consultation.email
+            ?.toLowerCase()
+            .includes(filters.email.toLowerCase())
+        : true;
+
+      const matchesConsultationType = filters.consultationType
+        ? consultation.consultationType
+            .toLowerCase()
+            .includes(filters.consultationType.toLowerCase())
+        : true;
+
+      const matchesProfessionalName = filters.professionalName
+        ? consultation.professionalName
+            .toLowerCase()
+            .includes(filters.professionalName.toLowerCase())
+        : true;
+
+      return (
+        matchesName &&
+        matchesCpf &&
+        matchesDate &&
+        matchesEmail &&
+        matchesConsultationType &&
+        matchesProfessionalName
+      );
+    });
+  }, [consultations, filters]);
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <header className="bg-[#1E1E1E] px-6 py-4 flex justify-between items-center">
@@ -43,7 +118,7 @@ export default function DashboardPage() {
         {user && !loading && (
           <div className="flex space-x-4">
             <button
-              onClick={() => openModal("add")}
+              onClick={() => openModal('add')}
               className="bg-white text-teal-600 hover:bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer"
             >
               + Adicionar Consulta
@@ -53,29 +128,34 @@ export default function DashboardPage() {
               disabled={loading}
               className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-sm cursor-pointer"
             >
-              {loading ? "Saindo…" : "Sair"}
+              {loading ? 'Saindo…' : 'Sair'}
             </button>
           </div>
         )}
         {!user && !loading && (
           <button
-            onClick={() => router.replace("/login")}
+            onClick={() => router.replace('/login')}
             disabled={loading}
             className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-sm cursor-pointer"
           >
-            {loading ? "Redirecionando..." : "Entrar"}
+            {loading ? 'Redirecionando...' : 'Entrar'}
           </button>
         )}
       </header>
 
       <main className="flex-1 px-6 py-4">
-        <ConsultationTable
-          consultations={consultations}
-          loading={isLoadingData}
-          onDelete={fetchConsultations}
-          setSelectedConsultation={setSelectedConsultation}
-          openModal={openModal}
-        />
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <ConsultationFilters filters={filters} setFilters={setFilters} />
+          <div className="flex-1 w-full overflow-auto">
+            <ConsultationTable
+              consultations={filteredConsultations}
+              loading={isLoadingData}
+              onDelete={fetchConsultations}
+              setSelectedConsultation={setSelectedConsultation}
+              openModal={openModal}
+            />
+          </div>
+        </div>
       </main>
 
       <footer className="bg-[#1E1E1E] text-center text-sm text-gray-400 py-3">
@@ -84,7 +164,7 @@ export default function DashboardPage() {
 
       <ModalAddMedicalConsultation setConsultations={setConsultations} />
 
-      {selectedConsultation && modalType === "edit" && (
+      {selectedConsultation && modalType === 'edit' && (
         <ModalEditMedicalConsultation
           selectedConsultation={selectedConsultation}
           setConsultations={setConsultations}
