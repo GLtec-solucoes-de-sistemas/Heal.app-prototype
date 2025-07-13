@@ -26,8 +26,6 @@ export default function DashboardPage() {
     cpf: '',
     consultationType: '',
     professionalName: '',
-    // startDate: new Date().toISOString().split('T')[0],
-    // endDate: new Date().toISOString().split('T')[0],
     startDate: '',
     endDate: '',
   });
@@ -64,21 +62,22 @@ export default function DashboardPage() {
         : true;
 
       const matchesDate = (() => {
-        if (!filters.startDate && !filters.endDate) {
-          return true;
-        }
+        if (!filters.startDate && !filters.endDate) return true;
 
-        if (filters.startDate && !filters.endDate) {
-          return consultation.consultationDate >= filters.startDate;
-        }
+        const consultationDate = new Date(consultation.consultationDate);
+        const consultationDay = consultationDate.toISOString().split('T')[0];
 
-        if (!filters.startDate && filters.endDate) {
-          return consultation.consultationDate <= filters.endDate;
-        }
+        const startDay = filters.startDate
+          ? new Date(filters.startDate).toISOString().split('T')[0]
+          : null;
+
+        const endDay = filters.endDate
+          ? new Date(filters.endDate).toISOString().split('T')[0]
+          : null;
 
         return (
-          consultation.consultationDate >= filters.startDate &&
-          consultation.consultationDate <= filters.endDate
+          (!startDay || consultationDay >= startDay) &&
+          (!endDay || consultationDay <= endDay)
         );
       })();
 
