@@ -1,7 +1,7 @@
 "use client";
 
 import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
+import { Consultation, ConsultationStatus } from "@/models/consultation";
 import { Modal } from "../Modal";
 
 export function ConfirmAppointmentModal({
@@ -9,45 +9,163 @@ export function ConfirmAppointmentModal({
   onConfirm,
 }: {
   consultation: Consultation;
-  onConfirm: () => void;
+  onConfirm: (updatedStatus: ConsultationStatus) => void;
 }) {
   const { modalType, closeModal } = useModal();
   const isOpen = modalType === "confirm";
 
   if (!isOpen) return null;
 
+  const dateObj = consultation.consultationDate
+    ? new Date(consultation.consultationDate)
+    : null;
+
   return (
     <Modal>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded p-6 max-w-md w-full shadow-lg relative">
-          <h2 className="text-lg font-bold mb-4">Confirmar Consulta</h2>
-          <div className="space-y-2 text-sm">
-            <p><strong>Nome:</strong> {consultation.patientName}</p>
-            <p><strong>CPF:</strong> {consultation.document}</p>
-            <p><strong>Email:</strong> {consultation.email}</p>
-            <p><strong>Telefone:</strong> {consultation.phoneNumber}</p>
-            <p><strong>Tipo:</strong> {consultation.consultationType}</p>
-            <p><strong>Data:</strong> {consultation.consultationDate}</p>
-            {/* <p><strong>Horário:</strong> {consultation.time}</p> */}
+      <h2 className="text-black text-center text-xl font-semibold mb-4">
+        Confirmação da Consulta
+      </h2>
+      <span className="text-black flex justify-center mb-6 text-sm">
+        Verifique as informações antes de confirmar a consulta.
+      </span>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-black text-sm mb-6 text-start">
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="document" className="font-medium block mb-1">
+              CPF
+            </label>
+            <input
+              id="document"
+              type="text"
+              value={consultation.document || ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
           </div>
-          <div className="mt-6 flex justify-end gap-4">
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 border border-gray-300 rounded"
+
+          <div>
+            <label htmlFor="email" className="font-medium block mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={consultation.email || ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="consultationType"
+              className="font-medium block mb-1"
             >
-              Cancelar
-            </button>
-            <button
-              onClick={() => {
-                onConfirm();
-                closeModal();
-              }}
-              className="px-4 py-2 bg-green-600 text-white rounded"
-            >
-              Confirmar
-            </button>
+              Tipo de consulta
+            </label>
+            <input
+              id="consultationType"
+              type="text"
+              value={consultation.consultationType || ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="date" className="font-medium block mb-1">
+              Data
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={dateObj ? dateObj.toISOString().split("T")[0] : ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
           </div>
         </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="patientName" className="font-medium block mb-1">
+              Nome do Paciente
+            </label>
+            <input
+              id="patientName"
+              type="text"
+              value={consultation.patientName || ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="phoneNumber" className="font-medium block mb-1">
+              Telefone
+            </label>
+            <input
+              id="phoneNumber"
+              type="tel"
+              value={consultation.phoneNumber || ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="professionalName"
+              className="font-medium block mb-1"
+            >
+              Profissional
+            </label>
+            <input
+              id="professionalName"
+              type="text"
+              value={consultation.professionalName || ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="time" className="font-medium block mb-1">
+              Horário
+            </label>
+            <input
+              id="time"
+              type="time"
+              value={dateObj ? dateObj.toTimeString().slice(0, 5) : ""}
+              disabled
+              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center space-x-4">
+        <button
+          type="button"
+          onClick={() => {
+            onConfirm("Cancelado");
+            closeModal();
+          }}
+          className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 text-white cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onConfirm("Aguardando");
+            closeModal();
+          }}
+          className="px-4 py-2 rounded bg-teal-600 hover:bg-teal-700 text-white cursor-pointer"
+        >
+          Confirmar
+        </button>
       </div>
     </Modal>
   );

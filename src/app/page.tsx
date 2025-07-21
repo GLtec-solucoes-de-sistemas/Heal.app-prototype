@@ -8,6 +8,8 @@ import { useModal } from "@/contexts/ModalContext";
 import { Consultation } from "@/models/consultation";
 import { useRouter } from "next/navigation";
 import { ModalEditMedicalConsultation } from "@/components/modals/ModalEditMedicalConsultation";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function DashboardPage() {
   const { openModal, modalType } = useModal();
@@ -19,21 +21,39 @@ export default function DashboardPage() {
     useState<Consultation | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const fetchConsultations = async () => {
-    try {
-      const response = await fetch("/api/consultations");
-      if (!response.ok) throw new Error("Erro ao buscar consultas");
-      const data = await response.json();
-      setConsultations(data);
-    } catch (error) {
-      console.error("Erro ao buscar consultas:", error);
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
   useEffect(() => {
-    fetchConsultations();
+    const consultationsRef = collection(db, "consultations");
+
+    const unsubscribe = onSnapshot(
+      consultationsRef,
+      (snapshot) => {
+        const consultationsData = snapshot.docs.map((doc) => {
+          const data = doc.data();
+
+          return {
+            id: doc.id,
+            consultationType: data.consultationType ?? "",
+            document: data.document ?? "",
+            email: data.email ?? "",
+            patientName: data.patientName ?? "",
+            phoneNumber: data.phoneNumber ?? "",
+            professionalName: data.professionalName ?? "",
+            consultationDate:
+              data.consultationDate?.toDate?.().toISOString() ?? "",
+            status: data.status ?? "Pendente",
+          };
+        });
+
+        setConsultations(consultationsData);
+        setIsLoadingData(false);
+      },
+      (error) => {
+        console.error("Erro ao escutar consultas:", error);
+        setIsLoadingData(false);
+      },
+    );
+
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -72,7 +92,6 @@ export default function DashboardPage() {
         <ConsultationTable
           consultations={consultations}
           loading={isLoadingData}
-          onDelete={fetchConsultations}
           setSelectedConsultation={setSelectedConsultation}
           openModal={openModal}
         />
@@ -82,13 +101,19 @@ export default function DashboardPage() {
         © 2025 Heal.app — Todos os direitos reservados
       </footer>
 
-      <ModalAddMedicalConsultation setConsultations={setConsultations} />
+      <ModalAddMedicalConsultation
+        setConsultations={setConsultations}
+        onClose={() => openModal(null)}
+      />
 
       {selectedConsultation && modalType === "edit" && (
         <ModalEditMedicalConsultation
           selectedConsultation={selectedConsultation}
           setConsultations={setConsultations}
-          onClose={() => setSelectedConsultation(null)}
+          onClose={() => {
+            setSelectedConsultation(null);
+            openModal(null);
+          }}
         />
       )}
     </div>

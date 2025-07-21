@@ -1,50 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
+import { useRouter } from "next/navigation";
+import { ConsultationStatus } from "@/models/consultation";
+import { useConfirmConsultation } from "./useConfirmConsultation";
 import { ConfirmAppointmentModal } from "@/components/modals/ConfirmAppointmentModal";
+import { use } from "react";
 
-export default function ConfirmPage({ params }: { params: { token: string } }) {
-  const { token } = params;
-  const [consultation, setConsultation] = useState<Consultation | null>(null);
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+export default function ConfirmPage(props: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = use(props.params);
+  const router = useRouter();
 
-  const { openModal } = useModal();
+  const { consultation, status, updateStatus } = useConfirmConsultation(token);
 
-  useEffect(() => {
-    const fetchConsultation = async () => {
-      try {
-        const q = query(
-          collection(db, "consultations"),
-          where("confirmationToken", "==", token)
-        );
-        const snapshot = await getDocs(q);
-
-        if (!snapshot.empty) {
-          const doc = snapshot.docs[0];
-          await updateDoc(doc.ref, { status: "Aguardando" });
-
-          setConsultation(doc.data() as Consultation);
-          setStatus("success");
-          openModal("confirm");
-        } else {
-          setStatus("error");
-        }
-      } catch (error) {
-        console.error("Erro ao confirmar consulta:", error);
-        setStatus("error");
-      }
-    };
-
-    fetchConsultation();
-  }, [token, openModal]);
-
-  const handleConfirm = () => {
-    // lógica
-  };
+  async function handleConfirm(updatedStatus: ConsultationStatus) {
+    try {
+      await updateStatus(updatedStatus);
+      alert(`Status atualizado para: ${updatedStatus}`);
+      router.push("/");
+    } catch {
+      alert("Erro ao atualizar status, tente novamente.");
+    }
+  }
 
   return (
     <div className="p-10 text-center">
@@ -63,7 +41,9 @@ export default function ConfirmPage({ params }: { params: { token: string } }) {
       )}
 
       {status === "error" && (
-        <p className="text-red-600">❌ Link inválido ou consulta não encontrada.</p>
+        <p className="text-red-600">
+          ❌ Link inválido ou consulta não encontrada.
+        </p>
       )}
     </div>
   );
