@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '../Modal';
@@ -11,6 +11,7 @@ import { formatCPF, formatPhone } from '@/utils/formatters';
 import { getTodayDate } from '@/utils/date';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import Select from 'react-select';
 
 interface ModalAddMedicalConsultationProps {
   setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
@@ -39,12 +40,28 @@ type ConsultationFormData = z.infer<typeof consultationSchema> & {
   time: string;
 };
 
+type Option = {
+  value: string;
+  label: string;
+};
+
+const consultationOptions: Option[] = [
+  { value: 'ced', label: 'Consulta de Crescimento e Desenvolvimento (CeD)' },
+  {
+    value: 'citologia_oncotica',
+    label: 'Consulta para coleta de citologia oncótica',
+  },
+  { value: 'pre_natal', label: 'Pré-natal' },
+  { value: 'procedimentos', label: 'Procedimentos' },
+];
+
 export const ModalAddMedicalConsultation = ({
   setConsultations,
 }: ModalAddMedicalConsultationProps) => {
   const { modalType, closeModal } = useModal();
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -196,11 +213,21 @@ export const ModalAddMedicalConsultation = ({
               <label htmlFor="consultationType" className="mb-1 text-black">
                 Tipo de consulta
               </label>
-              <input
-                id="consultationType"
-                {...register('consultationType')}
-                className="w-full rounded border px-3 py-2 text-black"
-                placeholder="Tipo de consulta"
+              <Controller
+                name="consultationType"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={consultationOptions}
+                    placeholder="Selecione o tipo de consulta"
+                    className="text-black"
+                    classNamePrefix="react-select"
+                    value={consultationOptions.find(
+                      (option) => option.value === field.value
+                    )}
+                    onChange={(option) => field.onChange(option?.value)}
+                  />
+                )}
               />
               {errors.consultationType && (
                 <p className="text-red-600 text-sm mt-1">
