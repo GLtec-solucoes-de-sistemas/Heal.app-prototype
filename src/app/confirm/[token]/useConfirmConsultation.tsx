@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Consultation, ConsultationStatus } from "@/models/consultation";
@@ -13,6 +11,7 @@ export function useConfirmConsultation(token: string) {
   const [status, setStatus] = useState<Status>("loading");
 
   const { openModal } = useModal();
+  const modalOpened = useRef(false);
 
   useEffect(() => {
     const fetchConsultation = async () => {
@@ -42,7 +41,11 @@ export function useConfirmConsultation(token: string) {
 
           setConsultation(consultationData);
           setStatus("success");
-          openModal("confirm");
+
+          if (!modalOpened.current) {
+            openModal("confirm");
+            modalOpened.current = true;
+          }
         } else {
           setStatus("error");
         }

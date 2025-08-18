@@ -1,62 +1,60 @@
-"use client";
+'use client';
 
-import React, { useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { Modal } from "../Modal";
-import { useModal } from "@/contexts/ModalContext";
-import { Consultation, ConsultationStatus } from "@/models/consultation";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { formatCPF, formatPhone } from "@/utils/formatters";
+import React, { useEffect } from 'react';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import { Modal } from '../Modal';
+import { useModal } from '@/contexts/ModalContext';
+import { Consultation, ConsultationStatus } from '@/models/consultation';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { formatCPF, formatPhone } from '@/utils/formatters';
+import Select from 'react-select';
 
 interface ModalEditMedicalConsultationProps {
-  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
   selectedConsultation: Consultation | null;
   onClose?: () => void;
 }
 
-type ConsultationFormData = Omit<Consultation, "id" | "consultationDate"> & {
+type ConsultationFormData = Omit<Consultation, 'id' | 'consultationDate'> & {
   date: string;
   time: string;
   status: ConsultationStatus;
 };
 
+type Option = { value: string; label: string };
+
+const consultationOptions: Option[] = [
+  { value: 'ced', label: 'Consulta de Crescimento e Desenvolvimento (CeD)' },
+  { value: 'citologia_oncotica', label: 'Consulta para coleta de citologia oncótica' },
+  { value: 'pre_natal', label: 'Pré-natal' },
+  { value: 'procedimentos', label: 'Procedimentos' },
+];
+
+const statusOptions: Option[] = [
+  { value: 'Confirmação Pendente', label: 'Confirmação Pendente' },
+  { value: 'Atendido', label: 'Atendido' },
+  { value: 'Cancelado', label: 'Cancelado' },
+  { value: 'Aguardando', label: 'Aguardando' },
+];
+
 const consultationSchema = z.object({
-  document: z
-    .string()
-    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "Digite um CPF válido"),
-  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
-  consultationType: z.string().min(1, "Tipo de consulta é obrigatório"),
-  date: z.string().min(1, "Data é obrigatória"),
-  patientName: z.string().min(1, "Nome do paciente é obrigatório"),
-  phoneNumber: z
-    .string()
-    .regex(
-      /^\(\d{2}\) \d{4,5}-\d{4}$/,
-      "Telefone deve estar no formato (99) 9 9999-9999",
-    ),
-  professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
-  time: z.string().min(1, "Horário é obrigatório"),
-  status: z.enum([
-    "Atendido",
-    "Cancelado",
-    "Aguardando",
-    "Confirmação Pendente",
-  ]),
+  document: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Digite um CPF válido'),
+  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  consultationType: z.string().min(1, 'Tipo de consulta é obrigatório'),
+  date: z.string().min(1, 'Data é obrigatória'),
+  patientName: z.string().min(1, 'Nome do paciente é obrigatório'),
+  phoneNumber: z.string().regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, 'Telefone deve estar no formato (99) 9 9999-9999'),
+  professionalName: z.string().min(1, 'Nome do profissional é obrigatório'),
+  time: z.string().min(1, 'Horário é obrigatório'),
+  status: z.enum(['Atendido', 'Cancelado', 'Aguardando', 'Confirmação Pendente']),
 });
 
 export function ModalEditMedicalConsultation({
-  setConsultations,
   selectedConsultation,
 }: ModalEditMedicalConsultationProps) {
   const { modalType, closeModal } = useModal();
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<ConsultationFormData>({
+
+  const { control, register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ConsultationFormData>({
     resolver: zodResolver(consultationSchema),
   });
 
@@ -66,32 +64,30 @@ export function ModalEditMedicalConsultation({
       const date = dateObj.toISOString().slice(0, 10);
       const time = dateObj.toTimeString().slice(0, 5);
 
-      setValue("patientName", selectedConsultation.patientName);
-      setValue("document", formatCPF(selectedConsultation.document));
-      setValue("email", selectedConsultation.email);
-      setValue("phoneNumber", formatPhone(selectedConsultation.phoneNumber));
-      setValue("professionalName", selectedConsultation.professionalName);
-      setValue("consultationType", selectedConsultation.consultationType);
-      setValue("date", date);
-      setValue("time", time);
-      setValue("status", selectedConsultation.status);
+      setValue('patientName', selectedConsultation.patientName);
+      setValue('document', formatCPF(selectedConsultation.document));
+      setValue('email', selectedConsultation.email);
+      setValue('phoneNumber', formatPhone(selectedConsultation.phoneNumber));
+      setValue('professionalName', selectedConsultation.professionalName);
+      setValue('consultationType', selectedConsultation.consultationType);
+      setValue('date', date);
+      setValue('time', time);
+      setValue('status', selectedConsultation.status);
     }
   }, [selectedConsultation, setValue]);
 
-  const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (
-    data,
-  ) => {
+  const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (data) => {
     if (!selectedConsultation) return;
 
     try {
       const { date, time, document, phoneNumber, ...rest } = data;
-      const cleanedCPF = document.replace(/\D/g, "");
-      const cleanedPhone = phoneNumber.replace(/\D/g, "");
+      const cleanedCPF = document.replace(/\D/g, '');
+      const cleanedPhone = phoneNumber.replace(/\D/g, '');
       const consultationDate = new Date(`${date}T${time}:00`);
 
-      const response = await fetch("/api/consultations", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/consultations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedConsultation.id,
           ...rest,
@@ -101,42 +97,24 @@ export function ModalEditMedicalConsultation({
         }),
       });
 
-      if (response.ok) {
-        const updatedConsultation = {
-          ...selectedConsultation,
-          ...rest,
-          document: cleanedCPF,
-          phoneNumber: cleanedPhone,
-          consultationDate: consultationDate.toISOString(),
-        };
-
-        setConsultations((prev) =>
-          prev.map((c) =>
-            c.id === selectedConsultation.id ? updatedConsultation : c,
-          ),
-        );
-        closeModal();
-        reset();
-      } else {
-        const error = await response.json();
-        console.error("Erro:", error.error);
-      }
+      closeModal();
+      reset();
     } catch (error) {
-      console.error("Erro ao atualizar consulta:", error);
+      console.error('Erro ao atualizar consulta:', error);
     }
   };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
-    setValue("document", e.target.value);
+    setValue('document', e.target.value);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatPhone(e.target.value);
-    setValue("phoneNumber", e.target.value);
+    setValue('phoneNumber', e.target.value);
   };
 
-  if (modalType !== "edit") return null;
+  if (modalType !== 'edit') return null;
 
   return (
     <Modal>
@@ -159,7 +137,7 @@ export function ModalEditMedicalConsultation({
               </label>
               <input
                 id="document"
-                {...register("document")}
+                {...register('document')}
                 onChange={handleCPFChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Digite seu CPF"
@@ -178,7 +156,7 @@ export function ModalEditMedicalConsultation({
               <input
                 id="email"
                 type="email"
-                {...register("email")}
+                {...register('email')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
               />
@@ -193,11 +171,21 @@ export function ModalEditMedicalConsultation({
               <label htmlFor="consultationType" className="mb-1 text-black">
                 Tipo de consulta
               </label>
-              <input
-                id="consultationType"
-                {...register("consultationType")}
-                className="w-full rounded border px-3 py-2 text-black"
-                placeholder="Tipo de consulta"
+              <Controller
+                name="consultationType"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={consultationOptions}
+                    placeholder="Selecione o tipo de consulta"
+                    className="text-black"
+                    classNamePrefix="react-select"
+                    value={consultationOptions.find(
+                      (option) => option.value === field.value
+                    )}
+                    onChange={(option) => field.onChange(option?.value)}
+                  />
+                )}
               />
               {errors.consultationType && (
                 <p className="text-red-600 text-sm mt-1">
@@ -213,7 +201,7 @@ export function ModalEditMedicalConsultation({
               <input
                 id="date"
                 type="date"
-                {...register("date")}
+                {...register('date')}
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.date && (
@@ -231,7 +219,7 @@ export function ModalEditMedicalConsultation({
               </label>
               <input
                 id="patientName"
-                {...register("patientName")}
+                {...register('patientName')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
               />
@@ -249,7 +237,7 @@ export function ModalEditMedicalConsultation({
               <input
                 id="phoneNumber"
                 type="tel"
-                {...register("phoneNumber")}
+                {...register('phoneNumber')}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(XX) XXXXX-XXXX"
@@ -267,7 +255,7 @@ export function ModalEditMedicalConsultation({
               </label>
               <input
                 id="professionalName"
-                {...register("professionalName")}
+                {...register('professionalName')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
               />
@@ -285,7 +273,7 @@ export function ModalEditMedicalConsultation({
               <input
                 id="time"
                 type="time"
-                {...register("time")}
+                {...register('time')}
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.time && (
@@ -301,15 +289,22 @@ export function ModalEditMedicalConsultation({
           <label htmlFor="status" className="mb-1 text-black">
             Status
           </label>
-          <select
-            id="status"
-            {...register("status")}
-            className="w-full rounded border px-3 py-3 text-black"
-          >
-            <option value="Atendido">Atendido</option>
-            <option value="Confirmação Pendente">Confirmação Pendente</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={statusOptions}
+                placeholder="Selecione o status da consulta"
+                className="text-black"
+                classNamePrefix="react-select"
+                value={statusOptions.find(
+                  (option) => option.value === field.value
+                )}
+                onChange={(option) => field.onChange(option?.value)}
+              />
+            )}
+          />
           {errors.status && (
             <p className="text-red-600 text-sm mt-1">{errors.status.message}</p>
           )}

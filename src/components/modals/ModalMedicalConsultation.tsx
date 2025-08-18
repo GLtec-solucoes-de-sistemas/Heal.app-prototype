@@ -1,38 +1,37 @@
-"use client";
+'use client';
 
-import React, { useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Modal } from "../Modal";
-import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
-import { formatCPF, formatPhone } from "@/utils/formatters";
-import { getTodayDate } from "@/utils/date";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import React, { useEffect } from 'react';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Modal } from '../Modal';
+import { useModal } from '@/contexts/ModalContext';
+import { formatCPF, formatPhone } from '@/utils/formatters';
+import { getTodayDate } from '@/utils/date';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import Select from 'react-select';
 
 interface ModalAddMedicalConsultationProps {
-  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
   onClose?: () => void;
 }
 
 const consultationSchema = z.object({
   document: z
     .string()
-    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "Digite um CPF válido"),
-  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
-  consultationType: z.string().min(1, "Tipo de consulta é obrigatório"),
-  date: z.string().min(1, "Data é obrigatória"),
-  patientName: z.string().min(1, "Nome do paciente é obrigatório"),
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Digite um CPF válido'),
+  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  consultationType: z.string().min(1, 'Tipo de consulta é obrigatório'),
+  date: z.string().min(1, 'Data é obrigatória'),
+  patientName: z.string().min(1, 'Nome do paciente é obrigatório'),
   phoneNumber: z
     .string()
     .regex(
       /^\(\d{2}\) \d{4,5}-\d{4}$/,
-      "Telefone deve estar no formato (99) 9 9999-9999",
+      'Telefone deve estar no formato (99) 9 9999-9999'
     ),
-  professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
-  time: z.string().min(1, "Horário é obrigatório"),
+  professionalName: z.string().min(1, 'Nome do profissional é obrigatório'),
+  time: z.string().min(1, 'Horário é obrigatório'),
 });
 
 type ConsultationFormData = z.infer<typeof consultationSchema> & {
@@ -40,284 +39,302 @@ type ConsultationFormData = z.infer<typeof consultationSchema> & {
   time: string;
 };
 
-export const ModalAddMedicalConsultation =
-  ({}: ModalAddMedicalConsultationProps) => {
-    const { modalType, closeModal } = useModal();
+type Option = { value: string; label: string };
 
-    const {
-      register,
-      handleSubmit,
-      reset,
-      setValue,
-      formState: { errors },
-    } = useForm<ConsultationFormData>({
-      resolver: zodResolver(consultationSchema),
-    });
+const consultationOptions: Option[] = [
+  { value: 'ced', label: 'Consulta de Crescimento e Desenvolvimento (CeD)' },
+  {
+    value: 'citologia_oncotica',
+    label: 'Consulta para coleta de citologia oncótica',
+  },
+  { value: 'pre_natal', label: 'Pré-natal' },
+  { value: 'procedimentos', label: 'Procedimentos' },
+];
 
-    const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.target.value = formatCPF(e.target.value);
-      setValue("document", e.target.value);
-    };
+export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsultationProps) => {
+  const { modalType, closeModal } = useModal();
 
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.target.value = formatPhone(e.target.value);
-      setValue("phoneNumber", e.target.value);
-    };
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<ConsultationFormData>({
+    resolver: zodResolver(consultationSchema),
+  });
 
-    const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
-      try {
-        const { date, time, document, phoneNumber, ...rest } = data;
-
-        const cleanedCPF = document.replace(/\D/g, "");
-        const cleanedPhone = phoneNumber.replace(/\D/g, "");
-        const consultationDate = new Date(`${date}T${time}:00`);
-
-        const formattedDate = format(
-          consultationDate,
-          "dd 'de' MMMM 'às' HH:mm",
-          {
-            locale: ptBR,
-          },
-        );
-
-        const response = await fetch("/api/consultations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...rest,
-            document: cleanedCPF,
-            phoneNumber: cleanedPhone,
-            consultationDate,
-            status: "Confirmação Pendente",
-          }),
-        });
-
-        if (response.ok) {
-          const newConsultation = await response.json();
-          const confirmationToken = newConsultation.confirmationToken;
-          closeModal();
-          reset();
-
-          const baseUrl =
-            process.env.NEXT_PUBLIC_BASE_URL ||
-            "https://healapp-prototype.netlify.app";
-
-          const normalizedUrl = baseUrl.startsWith("http")
-            ? baseUrl
-            : `https://${baseUrl}`;
-
-          const whatsappMessageRaw = [
-            `👋 *Olá ${data.patientName}!*`,
-            `📅 *Consulta:* ${formattedDate}`,
-            `📍Confirme sua presença acessando o link abaixo:`,
-            `${normalizedUrl}/confirm/${confirmationToken}`,
-            "Após a confirmação, você pode acompanhar a fila de espera no link a seguir:",
-            normalizedUrl,
-          ].join("\n\n");
-
-          const encodedMessage = encodeURIComponent(whatsappMessageRaw);
-
-          const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
-          const baseUrlWhatsapp = isMobile
-            ? "https://api.whatsapp.com/send"
-            : "https://web.whatsapp.com/send";
-
-          const whatsappURL = `${baseUrlWhatsapp}?phone=55${cleanedPhone}&text=${encodedMessage}`;
-
-          window.open(whatsappURL, "_blank");
-        } else {
-          const error = await response.json();
-          console.error("Erro:", error.error);
-        }
-      } catch (error) {
-        console.error("Erro ao enviar consulta:", error);
-      }
-    };
-
-    useEffect(() => {
-      if (modalType === "add") {
-        setValue("date", getTodayDate());
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [modalType]);
-
-    if (modalType !== "add") return null;
-
-    return (
-      <Modal>
-        <h2 className="text-black text-center text-xl font-semibold mb-2">
-          Cadastro de paciente
-        </h2>
-        <span className="text-black flex justify-center mb-4">
-          Adicione as informações do paciente para adicioná-lo à lista.
-        </span>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="document" className="mb-1 text-black">
-                  CPF
-                </label>
-                <input
-                  id="document"
-                  {...register("document")}
-                  onChange={handleCPFChange}
-                  className="w-full rounded border px-3 py-2 text-black"
-                  placeholder="Digite o CPF do paciente"
-                />
-                {errors.document && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.document.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="mb-1 text-black">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  {...register("email")}
-                  className="w-full rounded border px-3 py-2 text-black"
-                  placeholder="exemplo@dominio.com"
-                />
-                {errors.email && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="consultationType" className="mb-1 text-black">
-                  Tipo de consulta
-                </label>
-                <input
-                  id="consultationType"
-                  {...register("consultationType")}
-                  className="w-full rounded border px-3 py-2 text-black"
-                  placeholder="Tipo de consulta"
-                />
-                {errors.consultationType && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.consultationType.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="date" className="mb-1 text-black">
-                  Data
-                </label>
-                <input
-                  id="date"
-                  type="date"
-                  {...register("date")}
-                  className="w-full rounded border px-3 py-2 text-black"
-                />
-                {errors.date && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.date.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="patientName" className="mb-1 text-black">
-                  Nome do paciente
-                </label>
-                <input
-                  id="patientName"
-                  {...register("patientName")}
-                  className="w-full rounded border px-3 py-2 text-black"
-                  placeholder="Nome completo"
-                />
-                {errors.patientName && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.patientName.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="phoneNumber" className="mb-1 text-black">
-                  Telefone
-                </label>
-                <input
-                  id="phoneNumber"
-                  type="tel"
-                  {...register("phoneNumber")}
-                  onChange={handlePhoneChange}
-                  className="w-full rounded border px-3 py-2 text-black"
-                  placeholder="(99) 9 9999-9999"
-                />
-                {errors.phoneNumber && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.phoneNumber.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="professionalName" className="mb-1 text-black">
-                  Profissional
-                </label>
-                <input
-                  id="professionalName"
-                  {...register("professionalName")}
-                  className="w-full rounded border px-3 py-2 text-black"
-                  placeholder="Nome do profissional"
-                />
-                {errors.professionalName && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.professionalName.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="time" className="mb-1 text-black">
-                  Horário
-                </label>
-                <input
-                  id="time"
-                  type="time"
-                  {...register("time")}
-                  className="w-full rounded border px-3 py-2 text-black"
-                />
-                {errors.time && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.time.message}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center space-x-2">
-            <button
-              type="button"
-              onClick={() => {
-                reset();
-                closeModal();
-              }}
-              className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
-            >
-              Cadastrar
-            </button>
-          </div>
-        </form>
-      </Modal>
-    );
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = formatCPF(e.target.value);
+    setValue('document', e.target.value);
   };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = formatPhone(e.target.value);
+    setValue('phoneNumber', e.target.value);
+  };
+
+  const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
+    try {
+      const { date, time, document, phoneNumber, ...rest } = data;
+
+      const cleanedCPF = document.replace(/\D/g, '');
+      const cleanedPhone = phoneNumber.replace(/\D/g, '');
+      const consultationDate = new Date(`${date}T${time}:00`);
+
+      const formattedDate = format(
+        consultationDate,
+        "dd 'de' MMMM 'às' HH:mm",
+        { locale: ptBR }
+      );
+
+      const response = await fetch('/api/consultations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...rest,
+          document: cleanedCPF,
+          phoneNumber: cleanedPhone,
+          consultationDate,
+          status: 'Confirmação Pendente',
+        }),
+      });
+
+      if (response.ok) {
+        const newConsultation = await response.json();
+        const confirmationToken = newConsultation.confirmationToken;
+
+        closeModal();
+        reset();
+
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000/';
+        const normalizedUrl = baseUrl.startsWith('http')
+          ? baseUrl
+          : `https://${baseUrl}`;
+
+        const whatsappMessageRaw = [
+          `👋 *Olá ${data.patientName}!*`,
+          `📅 *Consulta:* ${formattedDate}`,
+          `📍Confirme sua presença acessando o link abaixo:`,
+          `${normalizedUrl}/confirm/${confirmationToken}`,
+          'Após a confirmação, você pode acompanhar a fila de espera no link a seguir:',
+          normalizedUrl,
+        ].join('\n\n');
+
+        const encodedMessage = encodeURIComponent(whatsappMessageRaw);
+
+        const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+        const baseUrlWhatsapp = isMobile
+          ? 'https://api.whatsapp.com/send'
+          : 'https://web.whatsapp.com/send';
+
+        const whatsappURL = `${baseUrlWhatsapp}?phone=55${cleanedPhone}&text=${encodedMessage}`;
+
+        window.open(whatsappURL, '_blank');
+      } else {
+        const error = await response.json();
+        console.error('Erro:', error.error);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar consulta:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (modalType === 'add') {
+      setValue('date', getTodayDate());
+    }
+  }, [modalType, setValue]);
+
+  if (modalType !== 'add') return null;
+
+  return (
+    <Modal>
+      <h2 className="text-black text-center text-xl font-semibold mb-2">
+        Cadastro de paciente
+      </h2>
+      <span className="text-black flex justify-center mb-4">
+        Adicione as informações do paciente para adicioná-lo à lista.
+      </span>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="document" className="mb-1 text-black">
+                CPF
+              </label>
+              <input
+                id="document"
+                {...register('document')}
+                onChange={handleCPFChange}
+                className="w-full rounded border px-3 py-2 text-black"
+                placeholder="Digite o CPF do paciente"
+              />
+              {errors.document && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.document.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="email" className="mb-1 text-black">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                {...register('email')}
+                className="w-full rounded border px-3 py-2 text-black"
+                placeholder="exemplo@dominio.com"
+              />
+              {errors.email && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="consultationType" className="mb-1 text-black">
+                Tipo de consulta
+              </label>
+              <Controller
+                name="consultationType"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={consultationOptions}
+                    placeholder="Selecione o tipo de consulta"
+                    className="w-full rounded border py-[1px] text-black"
+                    classNamePrefix="react-select"
+                    value={consultationOptions.find(
+                      (option) => option.value === field.value
+                    )}
+                    onChange={(option) => field.onChange(option?.value)}
+                  />
+                )}
+              />
+              {errors.consultationType && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.consultationType.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="date" className="mb-1 text-black">
+                Data
+              </label>
+              <input
+                id="date"
+                type="date"
+                {...register('date')}
+                className="w-full rounded border px-3 py-2 text-black"
+              />
+              {errors.date && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.date.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="patientName" className="mb-1 text-black">
+                Nome do paciente
+              </label>
+              <input
+                id="patientName"
+                {...register('patientName')}
+                className="w-full rounded border px-3 py-2 text-black"
+                placeholder="Nome completo"
+              />
+              {errors.patientName && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.patientName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="phoneNumber" className="mb-1 text-black">
+                Telefone
+              </label>
+              <input
+                id="phoneNumber"
+                type="tel"
+                {...register('phoneNumber')}
+                onChange={handlePhoneChange}
+                className="w-full rounded border px-3 py-2 text-black"
+                placeholder="(99) 9 9999-9999"
+              />
+              {errors.phoneNumber && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.phoneNumber.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="professionalName" className="mb-1 text-black">
+                Profissional
+              </label>
+              <input
+                id="professionalName"
+                {...register('professionalName')}
+                className="w-full rounded border px-3 py-2 text-black"
+                placeholder="Nome do profissional"
+              />
+              {errors.professionalName && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.professionalName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="time" className="mb-1 text-black">
+                Horário
+              </label>
+              <input
+                id="time"
+                type="time"
+                {...register('time')}
+                className="w-full rounded border px-3 py-2 text-black"
+              />
+              {errors.time && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.time.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-center space-x-2">
+          <button
+            type="button"
+            onClick={() => {
+              reset();
+              closeModal();
+            }}
+            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
+          >
+            Cadastrar
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+};

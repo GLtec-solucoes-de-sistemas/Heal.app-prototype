@@ -3,6 +3,7 @@
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation, ConsultationStatus } from "@/models/consultation";
 import { Modal } from "../Modal";
+import { formatCPF, formatPhone } from "@/utils/formatters";
 
 export function ConfirmAppointmentModal({
   consultation,
@@ -38,7 +39,7 @@ export function ConfirmAppointmentModal({
             <input
               id="document"
               type="text"
-              value={consultation.document || ""}
+              value={formatCPF(consultation.document) || ""}
               disabled
               className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
             />
@@ -108,7 +109,7 @@ export function ConfirmAppointmentModal({
             <input
               id="phoneNumber"
               type="tel"
-              value={consultation.phoneNumber || ""}
+              value={formatPhone(consultation.phoneNumber) || ""}
               disabled
               className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
             />

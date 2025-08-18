@@ -1,15 +1,13 @@
 "use client";
 
+import { use } from "react";
 import { useRouter } from "next/navigation";
 import { ConsultationStatus } from "@/models/consultation";
 import { useConfirmConsultation } from "./useConfirmConsultation";
 import { ConfirmAppointmentModal } from "@/components/modals/ConfirmAppointmentModal";
-import { use } from "react";
 
-export default function ConfirmPage(props: {
-  params: Promise<{ token: string }>;
-}) {
-  const { token } = use(props.params);
+export default function ConfirmPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = use(params);
   const router = useRouter();
 
   const { consultation, status, updateStatus } = useConfirmConsultation(token);
@@ -17,8 +15,7 @@ export default function ConfirmPage(props: {
   async function handleConfirm(updatedStatus: ConsultationStatus) {
     try {
       await updateStatus(updatedStatus);
-      alert(`Status atualizado para: ${updatedStatus}`);
-      router.push("/");
+      router.replace("/");
     } catch {
       alert("Erro ao atualizar status, tente novamente.");
     }
