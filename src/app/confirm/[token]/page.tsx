@@ -6,7 +6,11 @@ import { ConsultationStatus } from "@/models/consultation";
 import { useConfirmConsultation } from "./useConfirmConsultation";
 import { ConfirmAppointmentModal } from "@/components/modals/ConfirmAppointmentModal";
 
-export default function ConfirmPage({ params }: { params: Promise<{ token: string }> }) {
+export default function ConfirmPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
   const { token } = use(params);
   const router = useRouter();
 

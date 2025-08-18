@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { ConsultationTable } from '@/components/ConsultationTable';
-import { ModalAddMedicalConsultation } from '@/components/modals/ModalMedicalConsultation';
-import { useModal } from '@/contexts/ModalContext';
-import { Consultation } from '@/models/consultation';
-import { useRouter } from 'next/navigation';
-import { ModalEditMedicalConsultation } from '@/components/modals/ModalEditMedicalConsultation';
-import { ConsultationFilters } from '@/components/ConsultationFilters';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useEffect, useState, useMemo } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ConsultationTable } from "@/components/ConsultationTable";
+import { ModalAddMedicalConsultation } from "@/components/modals/ModalMedicalConsultation";
+import { useModal } from "@/contexts/ModalContext";
+import { Consultation } from "@/models/consultation";
+import { useRouter } from "next/navigation";
+import { ModalEditMedicalConsultation } from "@/components/modals/ModalEditMedicalConsultation";
+import { ConsultationFilters } from "@/components/ConsultationFilters";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function DashboardPage() {
   const { openModal, modalType } = useModal();
@@ -23,17 +23,17 @@ export default function DashboardPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [filters, setFilters] = useState({
-    patientName: '',
-    email: '',
-    cpf: '',
-    consultationType: '',
-    professionalName: '',
-    startDate: '',
-    endDate: '',
+    patientName: "",
+    email: "",
+    cpf: "",
+    consultationType: "",
+    professionalName: "",
+    startDate: "",
+    endDate: "",
   });
 
   useEffect(() => {
-    const consultationsRef = collection(db, 'consultations');
+    const consultationsRef = collection(db, "consultations");
 
     const unsubscribe = onSnapshot(
       consultationsRef,
@@ -43,15 +43,15 @@ export default function DashboardPage() {
 
           return {
             id: doc.id,
-            consultationType: data.consultationType ?? '',
-            document: data.document ?? '',
-            email: data.email ?? '',
-            patientName: data.patientName ?? '',
-            phoneNumber: data.phoneNumber ?? '',
-            professionalName: data.professionalName ?? '',
+            consultationType: data.consultationType ?? "",
+            document: data.document ?? "",
+            email: data.email ?? "",
+            patientName: data.patientName ?? "",
+            phoneNumber: data.phoneNumber ?? "",
+            professionalName: data.professionalName ?? "",
             consultationDate:
-              data.consultationDate?.toDate?.().toISOString() ?? '',
-            status: data.status ?? 'Pendente',
+              data.consultationDate?.toDate?.().toISOString() ?? "",
+            status: data.status ?? "Pendente",
           };
         });
 
@@ -59,9 +59,9 @@ export default function DashboardPage() {
         setIsLoadingData(false);
       },
       (error) => {
-        console.error('Erro ao escutar consultas:', error);
+        console.error("Erro ao escutar consultas:", error);
         setIsLoadingData(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -77,22 +77,22 @@ export default function DashboardPage() {
 
       const matchesCpf = filters.cpf
         ? consultation.document
-            .replace(/\D/g, '')
-            .includes(filters.cpf.replace(/\D/g, ''))
+            .replace(/\D/g, "")
+            .includes(filters.cpf.replace(/\D/g, ""))
         : true;
 
       const matchesDate = (() => {
         if (!filters.startDate && !filters.endDate) return true;
 
         const consultationDate = new Date(consultation.consultationDate);
-        const consultationDay = consultationDate.toISOString().split('T')[0];
+        const consultationDay = consultationDate.toISOString().split("T")[0];
 
         const startDay = filters.startDate
-          ? new Date(filters.startDate).toISOString().split('T')[0]
+          ? new Date(filters.startDate).toISOString().split("T")[0]
           : null;
 
         const endDay = filters.endDate
-          ? new Date(filters.endDate).toISOString().split('T')[0]
+          ? new Date(filters.endDate).toISOString().split("T")[0]
           : null;
 
         return (
@@ -102,7 +102,9 @@ export default function DashboardPage() {
       })();
 
       const matchesEmail = filters.email
-        ? consultation.email?.toLowerCase().includes(filters.email.toLowerCase())
+        ? consultation.email
+            ?.toLowerCase()
+            .includes(filters.email.toLowerCase())
         : true;
 
       const matchesConsultationType = filters.consultationType
@@ -135,7 +137,7 @@ export default function DashboardPage() {
         {user && !loading && (
           <div className="flex space-x-4">
             <button
-              onClick={() => openModal('add')}
+              onClick={() => openModal("add")}
               className="bg-white text-teal-600 hover:bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer"
             >
               + Adicionar Consulta
@@ -145,17 +147,17 @@ export default function DashboardPage() {
               disabled={loading}
               className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-sm cursor-pointer"
             >
-              {loading ? 'Saindo…' : 'Sair'}
+              {loading ? "Saindo…" : "Sair"}
             </button>
           </div>
         )}
         {!user && !loading && (
           <button
-            onClick={() => router.replace('/login')}
+            onClick={() => router.replace("/login")}
             disabled={loading}
             className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-sm cursor-pointer"
           >
-            {loading ? 'Redirecionando...' : 'Entrar'}
+            {loading ? "Redirecionando..." : "Entrar"}
           </button>
         )}
       </header>
@@ -180,7 +182,7 @@ export default function DashboardPage() {
 
       <ModalAddMedicalConsultation onClose={() => openModal(null)} />
 
-      {selectedConsultation && modalType === 'edit' && (
+      {selectedConsultation && modalType === "edit" && (
         <ModalEditMedicalConsultation
           selectedConsultation={selectedConsultation}
           onClose={() => {

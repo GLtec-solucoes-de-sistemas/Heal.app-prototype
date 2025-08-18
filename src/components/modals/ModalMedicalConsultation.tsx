@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal } from '../Modal';
-import { useModal } from '@/contexts/ModalContext';
-import { formatCPF, formatPhone } from '@/utils/formatters';
-import { getTodayDate } from '@/utils/date';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import Select from 'react-select';
+import React, { useEffect } from "react";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Modal } from "../Modal";
+import { useModal } from "@/contexts/ModalContext";
+import { formatCPF, formatPhone } from "@/utils/formatters";
+import { getTodayDate } from "@/utils/date";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import Select from "react-select";
 
 interface ModalAddMedicalConsultationProps {
   onClose?: () => void;
@@ -19,19 +19,19 @@ interface ModalAddMedicalConsultationProps {
 const consultationSchema = z.object({
   document: z
     .string()
-    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Digite um CPF válido'),
-  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
-  consultationType: z.string().min(1, 'Tipo de consulta é obrigatório'),
-  date: z.string().min(1, 'Data é obrigatória'),
-  patientName: z.string().min(1, 'Nome do paciente é obrigatório'),
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "Digite um CPF válido"),
+  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
+  consultationType: z.string().min(1, "Tipo de consulta é obrigatório"),
+  date: z.string().min(1, "Data é obrigatória"),
+  patientName: z.string().min(1, "Nome do paciente é obrigatório"),
   phoneNumber: z
     .string()
     .regex(
       /^\(\d{2}\) \d{4,5}-\d{4}$/,
-      'Telefone deve estar no formato (99) 9 9999-9999'
+      "Telefone deve estar no formato (99) 9 9999-9999",
     ),
-  professionalName: z.string().min(1, 'Nome do profissional é obrigatório'),
-  time: z.string().min(1, 'Horário é obrigatório'),
+  professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
+  time: z.string().min(1, "Horário é obrigatório"),
 });
 
 type ConsultationFormData = z.infer<typeof consultationSchema> & {
@@ -42,16 +42,18 @@ type ConsultationFormData = z.infer<typeof consultationSchema> & {
 type Option = { value: string; label: string };
 
 const consultationOptions: Option[] = [
-  { value: 'ced', label: 'Consulta de Crescimento e Desenvolvimento (CeD)' },
+  { value: "ced", label: "Consulta de Crescimento e Desenvolvimento (CeD)" },
   {
-    value: 'citologia_oncotica',
-    label: 'Consulta para coleta de citologia oncótica',
+    value: "citologia_oncotica",
+    label: "Consulta para coleta de citologia oncótica",
   },
-  { value: 'pre_natal', label: 'Pré-natal' },
-  { value: 'procedimentos', label: 'Procedimentos' },
+  { value: "pre_natal", label: "Pré-natal" },
+  { value: "procedimentos", label: "Procedimentos" },
 ];
 
-export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsultationProps) => {
+export const ModalAddMedicalConsultation = ({
+  onClose,
+}: ModalAddMedicalConsultationProps) => {
   const { modalType, closeModal } = useModal();
 
   const {
@@ -67,37 +69,37 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
-    setValue('document', e.target.value);
+    setValue("document", e.target.value);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatPhone(e.target.value);
-    setValue('phoneNumber', e.target.value);
+    setValue("phoneNumber", e.target.value);
   };
 
   const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
     try {
       const { date, time, document, phoneNumber, ...rest } = data;
 
-      const cleanedCPF = document.replace(/\D/g, '');
-      const cleanedPhone = phoneNumber.replace(/\D/g, '');
+      const cleanedCPF = document.replace(/\D/g, "");
+      const cleanedPhone = phoneNumber.replace(/\D/g, "");
       const consultationDate = new Date(`${date}T${time}:00`);
 
       const formattedDate = format(
         consultationDate,
         "dd 'de' MMMM 'às' HH:mm",
-        { locale: ptBR }
+        { locale: ptBR },
       );
 
-      const response = await fetch('/api/consultations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...rest,
           document: cleanedCPF,
           phoneNumber: cleanedPhone,
           consultationDate,
-          status: 'Confirmação Pendente',
+          status: "Confirmação Pendente",
         }),
       });
 
@@ -109,8 +111,9 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
         reset();
 
         const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000/';
-        const normalizedUrl = baseUrl.startsWith('http')
+          process.env.NEXT_PUBLIC_BASE_URL ||
+          "https://healapp-prototype.netlify.app";
+        const normalizedUrl = baseUrl.startsWith("http")
           ? baseUrl
           : `https://${baseUrl}`;
 
@@ -119,36 +122,36 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
           `📅 *Consulta:* ${formattedDate}`,
           `📍Confirme sua presença acessando o link abaixo:`,
           `${normalizedUrl}/confirm/${confirmationToken}`,
-          'Após a confirmação, você pode acompanhar a fila de espera no link a seguir:',
+          "Após a confirmação, você pode acompanhar a fila de espera no link a seguir:",
           normalizedUrl,
-        ].join('\n\n');
+        ].join("\n\n");
 
         const encodedMessage = encodeURIComponent(whatsappMessageRaw);
 
         const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
         const baseUrlWhatsapp = isMobile
-          ? 'https://api.whatsapp.com/send'
-          : 'https://web.whatsapp.com/send';
+          ? "https://api.whatsapp.com/send"
+          : "https://web.whatsapp.com/send";
 
         const whatsappURL = `${baseUrlWhatsapp}?phone=55${cleanedPhone}&text=${encodedMessage}`;
 
-        window.open(whatsappURL, '_blank');
+        window.open(whatsappURL, "_blank");
       } else {
         const error = await response.json();
-        console.error('Erro:', error.error);
+        console.error("Erro:", error.error);
       }
     } catch (error) {
-      console.error('Erro ao enviar consulta:', error);
+      console.error("Erro ao enviar consulta:", error);
     }
   };
 
   useEffect(() => {
-    if (modalType === 'add') {
-      setValue('date', getTodayDate());
+    if (modalType === "add") {
+      setValue("date", getTodayDate());
     }
   }, [modalType, setValue]);
 
-  if (modalType !== 'add') return null;
+  if (modalType !== "add") return null;
 
   return (
     <Modal>
@@ -168,7 +171,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               </label>
               <input
                 id="document"
-                {...register('document')}
+                {...register("document")}
                 onChange={handleCPFChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Digite o CPF do paciente"
@@ -187,7 +190,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               <input
                 id="email"
                 type="email"
-                {...register('email')}
+                {...register("email")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
               />
@@ -212,7 +215,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
                     className="w-full rounded border py-[1px] text-black"
                     classNamePrefix="react-select"
                     value={consultationOptions.find(
-                      (option) => option.value === field.value
+                      (option) => option.value === field.value,
                     )}
                     onChange={(option) => field.onChange(option?.value)}
                   />
@@ -232,7 +235,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               <input
                 id="date"
                 type="date"
-                {...register('date')}
+                {...register("date")}
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.date && (
@@ -250,7 +253,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               </label>
               <input
                 id="patientName"
-                {...register('patientName')}
+                {...register("patientName")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
               />
@@ -268,7 +271,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               <input
                 id="phoneNumber"
                 type="tel"
-                {...register('phoneNumber')}
+                {...register("phoneNumber")}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(99) 9 9999-9999"
@@ -286,7 +289,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               </label>
               <input
                 id="professionalName"
-                {...register('professionalName')}
+                {...register("professionalName")}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
               />
@@ -304,7 +307,7 @@ export const ModalAddMedicalConsultation = ({ onClose }: ModalAddMedicalConsulta
               <input
                 id="time"
                 type="time"
-                {...register('time')}
+                {...register("time")}
                 className="w-full rounded border px-3 py-2 text-black"
               />
               {errors.time && (
