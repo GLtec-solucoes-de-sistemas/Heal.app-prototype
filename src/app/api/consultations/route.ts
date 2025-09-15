@@ -12,13 +12,13 @@ export async function GET() {
 
       return {
         id: doc.id,
-        consultationDate: data.consultationDate?.toDate().toISOString() || null,
-        consultationType: data.consultationType || '',
+        occurred_at: data.occurred_at?.toDate().toISOString() || null,
+        consultation_type: data.consultation_type || '',
         document: data.document || '',
-        email: data.email || '',
-        patientName: data.patientName || '',
-        phoneNumber: data.phoneNumber || '',
-        professionalName: data.professionalName || '',
+        patient_email: data.patient_email || '',
+        patient_name: data.patient_name || '',
+        phone_number: data.phone_number || '',
+        healthcare: data.healthcare || '',
         status: data.status || '',
       };
     });
@@ -38,24 +38,24 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
-      consultationDate,
-      consultationType,
+      occurred_at,
+      consultation_type,
       document,
-      email,
-      patientName,
-      phoneNumber,
-      professionalName,
+      patient_email,
+      patient_name,
+      phone_number,
+      healthcare,
       status = 'Confirmação Pendente',
     } = body;
 
     if (
-      !consultationDate ||
-      !consultationType ||
+      !occurred_at ||
+      !consultation_type ||
       !document ||
-      !email ||
-      !patientName ||
-      !phoneNumber ||
-      !professionalName
+      !patient_email ||
+      !patient_name ||
+      !phone_number ||
+      !healthcare
     ) {
       return NextResponse.json(
         { error: 'Campos obrigatórios ausentes' },
@@ -68,13 +68,13 @@ export async function POST(req: NextRequest) {
     const consultationRef = await adminFirestore
       .collection('consultations')
       .add({
-        consultationDate: Timestamp.fromDate(new Date(consultationDate)),
-        consultationType,
+        occurred_at: Timestamp.fromDate(new Date(occurred_at)),
+        consultation_type,
         document,
-        email,
-        patientName,
-        phoneNumber,
-        professionalName,
+        patient_email,
+        patient_name,
+        phone_number,
+        healthcare,
         status,
         confirmationToken,
       });
