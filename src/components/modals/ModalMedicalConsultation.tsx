@@ -21,17 +21,17 @@ const consultationSchema = z.object({
   document: z
     .string()
     .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Digite um CPF válido'),
-  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
-  consultationType: z.string().min(1, 'Tipo de consulta é obrigatório'),
+  patient_email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  consultation_type: z.string().min(1, 'Tipo de consulta é obrigatório'),
   date: z.string().min(1, 'Data é obrigatória'),
-  patientName: z.string().min(1, 'Nome do paciente é obrigatório'),
-  phoneNumber: z
+  patient_name: z.string().min(1, 'Nome do paciente é obrigatório'),
+  patient_phone: z
     .string()
     .regex(
       /^\(\d{2}\) \d{4,5}-\d{4}$/,
       'Telefone deve estar no formato (99) 9 9999-9999'
     ),
-  professionalName: z.string().min(1, 'Nome do profissional é obrigatório'),
+  healthcare: z.string().min(1, 'Nome do profissional é obrigatório'),
   time: z.string().min(1, 'Horário é obrigatório'),
 });
 
@@ -78,15 +78,15 @@ export const ModalAddMedicalConsultation = ({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatPhone(e.target.value);
-    setValue('phoneNumber', e.target.value);
+    setValue('patient_phone', e.target.value);
   };
 
   const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
     try {
-      const { date, time, document, phoneNumber, ...rest } = data;
+      const { date, time, document, patient_phone, ...rest } = data;
 
       const cleanedCPF = document.replace(/\D/g, '');
-      const cleanedPhone = phoneNumber.replace(/\D/g, '');
+      const cleanedPhone = patient_phone.replace(/\D/g, '');
       const consultationDate = new Date(`${date}T${time}:00`);
 
       const formattedDate = format(
@@ -103,7 +103,7 @@ export const ModalAddMedicalConsultation = ({
         body: JSON.stringify({
           ...rest,
           document: cleanedCPF,
-          phoneNumber: cleanedPhone,
+          patient_phone: cleanedPhone,
           consultationDate,
           status: 'Confirmação Pendente',
         }),
@@ -125,7 +125,7 @@ export const ModalAddMedicalConsultation = ({
           : `https://${baseUrl}`;
 
         const whatsappMessageRaw = [
-          `👋 *Olá ${data.patientName}!*`,
+          `👋 *Olá ${data.patient_name}!*`,
           `📅 *Consulta:* ${formattedDate}`,
           `📍Confirme sua presença acessando o link abaixo:`,
           `${normalizedUrl}/confirm/${confirmationToken}`,
@@ -192,29 +192,29 @@ export const ModalAddMedicalConsultation = ({
             </div>
 
             <div>
-              <label htmlFor="email" className="mb-1 text-black">
+              <label htmlFor="patient_email" className="mb-1 text-black">
                 Email
               </label>
               <input
-                id="email"
-                type="email"
-                {...register('email')}
+                id="patient_email"
+                type="patient_email"
+                {...register('patient_email')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
               />
-              {errors.email && (
+              {errors.patient_email && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.email.message}
+                  {errors.patient_email.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="consultationType" className="mb-1 text-black">
+              <label htmlFor="consultation_type" className="mb-1 text-black">
                 Tipo de consulta
               </label>
               <Controller
-                name="consultationType"
+                name="consultation_type"
                 control={control}
                 render={({ field }) => (
                   <Select
@@ -229,9 +229,9 @@ export const ModalAddMedicalConsultation = ({
                   />
                 )}
               />
-              {errors.consultationType && (
+              {errors.consultation_type && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.consultationType.message}
+                  {errors.consultation_type.message}
                 </p>
               )}
             </div>
@@ -256,54 +256,54 @@ export const ModalAddMedicalConsultation = ({
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="patientName" className="mb-1 text-black">
+              <label htmlFor="patient_name" className="mb-1 text-black">
                 Nome do paciente
               </label>
               <input
-                id="patientName"
-                {...register('patientName')}
+                id="patient_name"
+                {...register('patient_name')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
               />
-              {errors.patientName && (
+              {errors.patient_name && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.patientName.message}
+                  {errors.patient_name.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="mb-1 text-black">
+              <label htmlFor="patient_phone" className="mb-1 text-black">
                 Telefone
               </label>
               <input
-                id="phoneNumber"
+                id="patient_phone"
                 type="tel"
-                {...register('phoneNumber')}
+                {...register('patient_phone')}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(99) 9 9999-9999"
               />
-              {errors.phoneNumber && (
+              {errors.patient_phone && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.phoneNumber.message}
+                  {errors.patient_phone.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="professionalName" className="mb-1 text-black">
+              <label htmlFor="healthcare" className="mb-1 text-black">
                 Profissional
               </label>
               <input
-                id="professionalName"
-                {...register('professionalName')}
+                id="healthcare"
+                {...register('healthcare')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
               />
-              {errors.professionalName && (
+              {errors.healthcare && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.professionalName.message}
+                  {errors.healthcare.message}
                 </p>
               )}
             </div>
