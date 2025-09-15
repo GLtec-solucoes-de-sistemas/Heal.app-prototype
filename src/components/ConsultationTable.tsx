@@ -65,15 +65,16 @@ export const ConsultationTable = ({
             {consultations.map(
               ({
                 id,
-                patientName,
+                occurred_at,
                 document,
-                professionalName,
-                consultationType,
-                phoneNumber,
-                consultationDate,
+                consultation_type,
+                healthcare,
+                patient_email,
+                patient_name,
+                patient_phone,
                 status,
               }) => {
-                const dateObj = new Date(consultationDate);
+                const dateObj = new Date(occurred_at);
                 const formattedDate = dateObj.toLocaleDateString("pt-BR");
                 const formattedTime = dateObj.toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
@@ -82,18 +83,18 @@ export const ConsultationTable = ({
 
                 return (
                   <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
-                    <td className="px-4 py-2 text-center">{patientName}</td>
+                    <td className="px-4 py-2 text-center">{patient_name}</td>
                     <td className="px-4 py-2 text-center">
                       {formatCPF(document)}
                     </td>
                     <td className="px-4 py-2 text-center">
-                      {professionalName}
+                      {healthcare}
                     </td>
                     <td className="px-4 py-2 text-center">
-                      {formatPhone(phoneNumber)}
+                      {formatPhone(patient_phone)}
                     </td>
                     <td className="px-4 py-2 text-center">
-                      {consultationType}
+                      {consultation_type}
                     </td>
                     <td className="px-4 py-2 text-center">{formattedDate}</td>
                     <td className="px-4 py-2 text-center">{formattedTime}</td>

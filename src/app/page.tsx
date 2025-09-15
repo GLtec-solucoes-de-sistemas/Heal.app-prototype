@@ -21,11 +21,11 @@ export default function DashboardPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [filters, setFilters] = useState({
-    patientName: '',
-    email: '',
+    patient_name: '',
+    patient_email: '',
     cpf: '',
-    consultationType: '',
-    professionalName: '',
+    healthcare: '',
+    consultation_type: '',
     startDate: '',
     endDate: '',
   });
@@ -49,10 +49,10 @@ export default function DashboardPage() {
 
   const filteredConsultations = useMemo(() => {
     return consultations.filter((consultation) => {
-      const matchesName = filters.patientName
-        ? consultation.patientName
+      const matchesName = filters.patient_name
+        ? consultation.patient_name
             .toLowerCase()
-            .includes(filters.patientName.toLowerCase())
+            .includes(filters.patient_name.toLowerCase())
         : true;
 
       const matchesCpf = filters.cpf
@@ -64,7 +64,7 @@ export default function DashboardPage() {
       const matchesDate = (() => {
         if (!filters.startDate && !filters.endDate) return true;
 
-        const consultationDate = new Date(consultation.consultationDate);
+        const consultationDate = new Date(consultation.occurred_at);
         const consultationDay = consultationDate.toISOString().split('T')[0];
 
         const startDay = filters.startDate
@@ -81,22 +81,22 @@ export default function DashboardPage() {
         );
       })();
 
-      const matchesEmail = filters.email
-        ? consultation.email
+      const matchesEmail = filters.patient_email
+        ? consultation.patient_email
             ?.toLowerCase()
-            .includes(filters.email.toLowerCase())
+            .includes(filters.patient_email.toLowerCase())
         : true;
 
-      const matchesConsultationType = filters.consultationType
-        ? consultation.consultationType
+      const matchesConsultationType = filters.consultation_type
+        ? consultation.consultation_type
             .toLowerCase()
-            .includes(filters.consultationType.toLowerCase())
+            .includes(filters.consultation_type.toLowerCase())
         : true;
 
-      const matchesProfessionalName = filters.professionalName
-        ? consultation.professionalName
+      const matchesProfessionalName = filters.healthcare
+        ? consultation.healthcare
             .toLowerCase()
-            .includes(filters.professionalName.toLowerCase())
+            .includes(filters.healthcare.toLowerCase())
         : true;
 
       return (

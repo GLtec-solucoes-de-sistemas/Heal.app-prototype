@@ -6,12 +6,12 @@ export type ConsultationStatus =
 
 export type Consultation = {
   id: string;
-  consultationDate: string;
-  consultationType: string;
   document: string;
-  email: string;
-  patientName: string;
-  phoneNumber: string;
-  professionalName: string;
-  status: ConsultationStatus;
+  occurred_at: Date;
+  consultation_type: string;
+  healthcare: string;
+  patient_email: string;
+  patient_name: string;
+  patient_phone: string;
+  status: string;
 };

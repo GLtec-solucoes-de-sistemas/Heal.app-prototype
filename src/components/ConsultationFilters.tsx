@@ -3,11 +3,11 @@
 import { User, Mail, IdCard, Stethoscope } from 'lucide-react';
 
 type FiltersType = {
-  patientName: string;
-  email: string;
+  patient_name: string;
+  patient_email: string;
   cpf: string;
-  consultationType: string;
-  professionalName: string;
+  consultation_type: string;
+  healthcare: string;
   startDate: string;
   endDate: string;
 };
@@ -90,18 +90,18 @@ export const ConsultationFilters = ({ filters, setFilters }: Props) => {
       <InputWithIcon
         icon={User}
         placeholder="Buscar por nome"
-        value={filters.patientName}
+        value={filters.patient_name}
         onChange={(e) =>
-          setFilters((prev) => ({ ...prev, patientName: e.target.value }))
+          setFilters((prev) => ({ ...prev, patient_name: e.target.value }))
         }
       />
 
       <InputWithIcon
         icon={Mail}
         placeholder="Buscar por e-mail"
-        value={filters.email}
+        value={filters.patient_email}
         onChange={(e) =>
-          setFilters((prev) => ({ ...prev, email: e.target.value }))
+          setFilters((prev) => ({ ...prev, patient_email: e.target.value }))
         }
       />
 
@@ -117,11 +117,11 @@ export const ConsultationFilters = ({ filters, setFilters }: Props) => {
       <InputWithIcon
         icon={Stethoscope}
         placeholder="Buscar por profissional"
-        value={filters.professionalName}
+        value={filters.healthcare}
         onChange={(e) =>
           setFilters((prev) => ({
             ...prev,
-            professionalName: e.target.value,
+            healthcare: e.target.value,
           }))
         }
       />
@@ -129,11 +129,11 @@ export const ConsultationFilters = ({ filters, setFilters }: Props) => {
       <InputWithIcon
         icon={Stethoscope}
         placeholder="Tipo de consulta"
-        value={filters.consultationType}
+        value={filters.consultation_type}
         onChange={(e) =>
           setFilters((prev) => ({
             ...prev,
-            consultationType: e.target.value,
+            consultation_type: e.target.value,
           }))
         }
       />
