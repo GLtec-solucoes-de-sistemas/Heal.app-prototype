@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../lib/firebase";
 
 type FormData = {
-  email: string;
+  patient_email: string;
   password: string;
 };
 
@@ -31,7 +31,7 @@ export const LoginForm = () => {
     try {
       const { user } = await signInWithEmailAndPassword(
         auth,
-        data.email,
+        data.patient_email,
         data.password,
       );
 
@@ -60,16 +60,16 @@ export const LoginForm = () => {
             size={18}
           />
           <input
-            type="email"
+            type="patient_email"
             placeholder="E-MAIL"
-            {...register("email", { required: "E-mail é obrigatório" })}
+            {...register("patient_email", { required: "E-mail é obrigatório" })}
             className={`w-full h-full pl-10 pr-3 py-2 rounded-md bg-[#2A2A2A] text-white border ${
-              errors.email ? "border-red-500" : "border-gray-600"
+              errors.patient_email ? "border-red-500" : "border-gray-600"
             } outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-400`}
           />
         </div>
-        {errors.email && (
-          <span className="text-red-500 text-xs">{errors.email.message}</span>
+        {errors.patient_email && (
+          <span className="text-red-500 text-xs">{errors.patient_email.message}</span>
         )}
       </div>
 
