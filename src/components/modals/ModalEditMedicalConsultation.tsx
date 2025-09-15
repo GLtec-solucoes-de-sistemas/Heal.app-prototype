@@ -16,8 +16,14 @@ interface ModalEditMedicalConsultationProps {
   onClose?: () => void;
 }
 
-type ConsultationFormData = Omit<Consultation, 'id' | 'consultationDate'> & {
-  date: string;
+type ConsultationFormData = {
+  document: string;
+  patient_email: string;
+  consultation_type: string;
+  occurred_at: string;
+  patient_name: string;
+  patient_phone: string;
+  healthcare: string;
   time: string;
   status: ConsultationStatus;
 };
@@ -48,17 +54,17 @@ const consultationSchema = z.object({
   document: z
     .string()
     .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'Digite um CPF válido'),
-  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
-  consultationType: z.string().min(1, 'Tipo de consulta é obrigatório'),
-  date: z.string().min(1, 'Data é obrigatória'),
-  patientName: z.string().min(1, 'Nome do paciente é obrigatório'),
-  phoneNumber: z
+  patient_email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  consultation_type: z.string().min(1, 'Tipo de consulta é obrigatório'),
+  occurred_at: z.string().min(1, 'Data é obrigatória'),
+  patient_name: z.string().min(1, 'Nome do paciente é obrigatório'),
+  patient_phone: z
     .string()
     .regex(
       /^\(\d{2}\) \d{4,5}-\d{4}$/,
       'Telefone deve estar no formato (99) 9 9999-9999'
     ),
-  professionalName: z.string().min(1, 'Nome do profissional é obrigatório'),
+  healthcare: z.string().min(1, 'Nome do profissional é obrigatório'),
   time: z.string().min(1, 'Horário é obrigatório'),
   status: z.enum([
     'Atendido',
@@ -86,19 +92,30 @@ export function ModalEditMedicalConsultation({
 
   useEffect(() => {
     if (selectedConsultation) {
-      const dateObj = new Date(selectedConsultation.consultationDate);
+      const dateObj = new Date(selectedConsultation.occurred_at);
       const date = dateObj.toISOString().slice(0, 10);
       const time = dateObj.toTimeString().slice(0, 5);
 
-      setValue('patientName', selectedConsultation.patientName);
+      setValue('patient_name', selectedConsultation.patient_name);
       setValue('document', formatCPF(selectedConsultation.document));
-      setValue('email', selectedConsultation.email);
-      setValue('phoneNumber', formatPhone(selectedConsultation.phoneNumber));
-      setValue('professionalName', selectedConsultation.professionalName);
-      setValue('consultationType', selectedConsultation.consultationType);
-      setValue('date', date);
+      setValue('patient_email', selectedConsultation.patient_email);
+      setValue('patient_phone', formatPhone(selectedConsultation.patient_phone));
+      setValue('healthcare', selectedConsultation.healthcare);
+      setValue('consultation_type', selectedConsultation.consultation_type);
+      setValue('occurred_at', date);
       setValue('time', time);
-      setValue('status', selectedConsultation.status);
+
+      const statusMap: Record<string, ConsultationStatus> = {
+        'Atendido': 'Atendido',
+        'Cancelado': 'Cancelado',
+        'Aguardando': 'Aguardando',
+        'Confirmação Pendente': 'Confirmação Pendente',
+        'confirmacao_pendente': 'Confirmação Pendente',
+        'atendido': 'Atendido',
+        'cancelado': 'Cancelado',
+        'aguardando': 'Aguardando',
+      };
+      setValue('status', statusMap[selectedConsultation.status] ?? 'Aguardando');
     }
   }, [selectedConsultation, setValue]);
 
@@ -108,10 +125,10 @@ export function ModalEditMedicalConsultation({
     if (!selectedConsultation) return;
 
     try {
-      const { date, time, document, phoneNumber, ...rest } = data;
+      const { occurred_at, time, document, patient_phone, ...rest } = data;
       const cleanedCPF = document.replace(/\D/g, '');
-      const cleanedPhone = phoneNumber.replace(/\D/g, '');
-      const consultationDate = new Date(`${date}T${time}:00`);
+      const cleanedPhone = patient_phone.replace(/\D/g, '');
+      const consultationDate = new Date(`${occurred_at}T${time}:00`);
 
       const response = await fetch('/api/consultations', {
         method: 'PUT',
@@ -120,7 +137,7 @@ export function ModalEditMedicalConsultation({
           id: selectedConsultation.id,
           ...rest,
           document: cleanedCPF,
-          phoneNumber: cleanedPhone,
+          patient_phone: cleanedPhone,
           consultationDate,
         }),
       });
@@ -130,7 +147,7 @@ export function ModalEditMedicalConsultation({
           ...selectedConsultation,
           ...rest,
           document: cleanedCPF,
-          phoneNumber: cleanedPhone,
+          patient_phone: cleanedPhone,
           consultationDate: consultationDate.toISOString(),
         };
 
@@ -157,7 +174,7 @@ export function ModalEditMedicalConsultation({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatPhone(e.target.value);
-    setValue('phoneNumber', e.target.value);
+    setValue('patient_phone', e.target.value);
   };
 
   if (modalType !== 'edit') return null;
@@ -196,29 +213,29 @@ export function ModalEditMedicalConsultation({
             </div>
 
             <div>
-              <label htmlFor="email" className="mb-1 text-black">
+              <label htmlFor="patient_email" className="mb-1 text-black">
                 Email
               </label>
               <input
-                id="email"
-                type="email"
-                {...register('email')}
+                id="patient_email"
+                type="patient_email"
+                {...register('patient_email')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="exemplo@dominio.com"
               />
-              {errors.email && (
+              {errors.patient_email && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.email.message}
+                  {errors.patient_email.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="consultationType" className="mb-1 text-black">
+              <label htmlFor="consultation_type" className="mb-1 text-black">
                 Tipo de consulta
               </label>
               <Controller
-                name="consultationType"
+                name="consultation_type"
                 control={control}
                 render={({ field }) => (
                   <Select
@@ -233,9 +250,9 @@ export function ModalEditMedicalConsultation({
                   />
                 )}
               />
-              {errors.consultationType && (
+              {errors.consultation_type && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.consultationType.message}
+                  {errors.consultation_type.message}
                 </p>
               )}
             </div>
@@ -247,12 +264,12 @@ export function ModalEditMedicalConsultation({
               <input
                 id="date"
                 type="date"
-                {...register('date')}
+                {...register('occurred_at')}
                 className="w-full rounded border px-3 py-2 text-black"
               />
-              {errors.date && (
+              {errors.occurred_at && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.date.message}
+                  {errors.occurred_at.message}
                 </p>
               )}
             </div>
@@ -260,54 +277,54 @@ export function ModalEditMedicalConsultation({
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="patientName" className="mb-1 text-black">
+              <label htmlFor="patient_name" className="mb-1 text-black">
                 Nome do paciente
               </label>
               <input
-                id="patientName"
-                {...register('patientName')}
+                id="patient_name"
+                {...register('patient_name')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome completo"
               />
-              {errors.patientName && (
+              {errors.patient_name && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.patientName.message}
+                  {errors.patient_name.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="mb-1 text-black">
+              <label htmlFor="patient_phone" className="mb-1 text-black">
                 Telefone
               </label>
               <input
-                id="phoneNumber"
+                id="patient_phone"
                 type="tel"
-                {...register('phoneNumber')}
+                {...register('patient_phone')}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="(XX) XXXXX-XXXX"
               />
-              {errors.phoneNumber && (
+              {errors.patient_phone && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.phoneNumber.message}
+                  {errors.patient_phone.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="professionalName" className="mb-1 text-black">
+              <label htmlFor="healthcare" className="mb-1 text-black">
                 Profissional
               </label>
               <input
-                id="professionalName"
-                {...register('professionalName')}
+                id="healthcare"
+                {...register('healthcare')}
                 className="w-full rounded border px-3 py-2 text-black"
                 placeholder="Nome do profissional"
               />
-              {errors.professionalName && (
+              {errors.healthcare && (
                 <p className="text-red-600 text-sm mt-1">
-                  {errors.professionalName.message}
+                  {errors.healthcare.message}
                 </p>
               )}
             </div>
