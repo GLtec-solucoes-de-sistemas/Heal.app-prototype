@@ -3,14 +3,14 @@ import { Modal } from "../Modal";
 
 interface ModalCancelProps {
   text: string;
-  function: () => void;
+  onAction: () => void;
   isLoading: boolean;
   onClose?: () => void;
 }
 
 export function ConfirmModal({
   text,
-  function: handleFunction,
+  onAction: handleFunction,
   isLoading,
   onClose,
 }: ModalCancelProps) {
@@ -31,7 +31,10 @@ export function ConfirmModal({
             Cancelar
           </button>
           <button
-            onClick={handleFunction}
+            onClick={() => {
+              handleFunction();
+              closeModal();
+            }}
             disabled={isLoading}
             className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 cursor-pointer"
           >

@@ -5,17 +5,16 @@ import { Consultation, ConsultationStatus } from "@/models/consultation";
 import { Modal } from "../Modal";
 import { formatCPF, formatPhone } from "@/utils/formatters";
 
+type ConfirmAppointmentModalProps = {
+  consultation: Consultation;
+  onConfirm: (updatedStatus: ConsultationStatus) => void;
+};
+
 export function ConfirmAppointmentModal({
   consultation,
   onConfirm,
-}: {
-  consultation: Consultation;
-  onConfirm: (updatedStatus: ConsultationStatus) => void;
-}) {
-  const { modalType, closeModal } = useModal();
-  const isOpen = modalType === "confirm";
-
-  if (!isOpen) return null;
+}: ConfirmAppointmentModalProps) {
+  const { closeModal } = useModal();
 
   const dateObj = consultation.consultationDate
     ? new Date(consultation.consultationDate)
@@ -41,7 +40,7 @@ export function ConfirmAppointmentModal({
               type="text"
               value={formatCPF(consultation.document) || ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
 
@@ -54,7 +53,7 @@ export function ConfirmAppointmentModal({
               type="email"
               value={consultation.email || ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
 
@@ -70,7 +69,7 @@ export function ConfirmAppointmentModal({
               type="text"
               value={consultation.consultationType || ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
 
@@ -83,7 +82,7 @@ export function ConfirmAppointmentModal({
               type="date"
               value={dateObj ? dateObj.toISOString().split("T")[0] : ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
         </div>
@@ -98,7 +97,7 @@ export function ConfirmAppointmentModal({
               type="text"
               value={consultation.patientName || ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
 
@@ -111,7 +110,7 @@ export function ConfirmAppointmentModal({
               type="tel"
               value={formatPhone(consultation.phoneNumber) || ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
 
@@ -127,7 +126,7 @@ export function ConfirmAppointmentModal({
               type="text"
               value={consultation.professionalName || ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
 
@@ -140,7 +139,7 @@ export function ConfirmAppointmentModal({
               type="time"
               value={dateObj ? dateObj.toTimeString().slice(0, 5) : ""}
               disabled
-              className="w-full rounded border px-3 py-2 text-black bg-gray-100 cursor-not-allowed"
+              className="w-full rounded border px-3 py-2 bg-gray-100 text-black cursor-not-allowed"
             />
           </div>
         </div>

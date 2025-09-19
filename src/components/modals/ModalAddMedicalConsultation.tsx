@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "../Modal";
-import { useModal } from "@/contexts/ModalContext";
 import { formatCPF, formatPhone } from "@/utils/formatters";
 import { getTodayDate } from "@/utils/date";
 import { format } from "date-fns";
@@ -13,7 +11,7 @@ import { ptBR } from "date-fns/locale";
 import Select from "react-select";
 
 interface ModalAddMedicalConsultationProps {
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 const consultationSchema = z.object({
@@ -34,19 +32,13 @@ const consultationSchema = z.object({
   time: z.string().min(1, "Horário é obrigatório"),
 });
 
-type ConsultationFormData = z.infer<typeof consultationSchema> & {
-  date: string;
-  time: string;
-};
+type ConsultationFormData = z.infer<typeof consultationSchema>;
 
 type Option = { value: string; label: string };
 
 const consultationOptions: Option[] = [
   { value: "ced", label: "Consulta de Crescimento e Desenvolvimento (CeD)" },
-  {
-    value: "citologia_oncotica",
-    label: "Consulta para coleta de citologia oncótica",
-  },
+  { value: "citologia_oncotica", label: "Consulta para coleta de citologia oncótica" },
   { value: "pre_natal", label: "Pré-natal" },
   { value: "procedimentos", label: "Procedimentos" },
 ];
@@ -54,18 +46,19 @@ const consultationOptions: Option[] = [
 export const ModalAddMedicalConsultation = ({
   onClose,
 }: ModalAddMedicalConsultationProps) => {
-  const { modalType, closeModal } = useModal();
-
   const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<ConsultationFormData>({
-    resolver: zodResolver(consultationSchema),
-  });
+  control,
+  register,
+  handleSubmit,
+  reset,
+  setValue,
+  formState: { errors },
+} = useForm<ConsultationFormData>({
+  resolver: zodResolver(consultationSchema),
+  defaultValues: {
+    date: getTodayDate(),
+  },
+});
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
@@ -107,7 +100,7 @@ export const ModalAddMedicalConsultation = ({
         const newConsultation = await response.json();
         const confirmationToken = newConsultation.confirmationToken;
 
-        closeModal();
+        onClose();
         reset();
 
         const baseUrl =
@@ -144,14 +137,6 @@ export const ModalAddMedicalConsultation = ({
       console.error("Erro ao enviar consulta:", error);
     }
   };
-
-  useEffect(() => {
-    if (modalType === "add") {
-      setValue("date", getTodayDate());
-    }
-  }, [modalType, setValue]);
-
-  if (modalType !== "add") return null;
 
   return (
     <Modal>
@@ -324,7 +309,7 @@ export const ModalAddMedicalConsultation = ({
             type="button"
             onClick={() => {
               reset();
-              closeModal();
+              onClose();
             }}
             className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 cursor-pointer"
           >

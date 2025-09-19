@@ -3,23 +3,19 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ConsultationTable } from "@/components/ConsultationTable";
-import { ModalAddMedicalConsultation } from "@/components/modals/ModalMedicalConsultation";
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation } from "@/models/consultation";
 import { useRouter } from "next/navigation";
-import { ModalEditMedicalConsultation } from "@/components/modals/ModalEditMedicalConsultation";
 import { ConsultationFilters } from "@/components/ConsultationFilters";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function DashboardPage() {
-  const { openModal, modalType } = useModal();
+  const { onAdd } = useModal();
   const { logout, loading, user } = useAuth();
   const router = useRouter();
 
   const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [selectedConsultation, setSelectedConsultation] =
-    useState<Consultation | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [filters, setFilters] = useState({
@@ -61,7 +57,7 @@ export default function DashboardPage() {
       (error) => {
         console.error("Erro ao escutar consultas:", error);
         setIsLoadingData(false);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -90,7 +86,6 @@ export default function DashboardPage() {
         const startDay = filters.startDate
           ? new Date(filters.startDate).toISOString().split("T")[0]
           : null;
-
         const endDay = filters.endDate
           ? new Date(filters.endDate).toISOString().split("T")[0]
           : null;
@@ -137,7 +132,7 @@ export default function DashboardPage() {
         {user && !loading && (
           <div className="flex space-x-4">
             <button
-              onClick={() => openModal("add")}
+              onClick={onAdd}
               className="bg-white text-teal-600 hover:bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer"
             >
               + Adicionar Consulta
@@ -169,8 +164,6 @@ export default function DashboardPage() {
             <ConsultationTable
               consultations={filteredConsultations}
               loading={isLoadingData}
-              setSelectedConsultation={setSelectedConsultation}
-              openModal={openModal}
             />
           </div>
         </div>
@@ -179,18 +172,6 @@ export default function DashboardPage() {
       <footer className="bg-[#1E1E1E] text-center text-sm text-gray-400 py-3">
         © 2025 Heal.app — Todos os direitos reservados
       </footer>
-
-      <ModalAddMedicalConsultation onClose={() => openModal(null)} />
-
-      {selectedConsultation && modalType === "edit" && (
-        <ModalEditMedicalConsultation
-          selectedConsultation={selectedConsultation}
-          onClose={() => {
-            setSelectedConsultation(null);
-            openModal(null);
-          }}
-        />
-      )}
     </div>
   );
 }

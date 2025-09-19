@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Consultation, ConsultationStatus } from "@/models/consultation";
@@ -10,17 +12,19 @@ export function useConfirmConsultation(token: string) {
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [status, setStatus] = useState<Status>("loading");
 
-  const { openModal } = useModal();
-  const modalOpened = useRef(false);
+  const { closeModal, onConfirmAppointment } = useModal();
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchConsultation = async () => {
       try {
         const q = query(
           collection(db, "consultations"),
-          where("confirmationToken", "==", token),
+          where("confirmationToken", "==", token)
         );
         const snapshot = await getDocs(q);
+        if (!mounted) return;
 
         if (!snapshot.empty) {
           const docSnap = snapshot.docs[0];
@@ -41,11 +45,6 @@ export function useConfirmConsultation(token: string) {
 
           setConsultation(consultationData);
           setStatus("success");
-
-          if (!modalOpened.current) {
-            openModal("confirm");
-            modalOpened.current = true;
-          }
         } else {
           setStatus("error");
         }
@@ -56,31 +55,42 @@ export function useConfirmConsultation(token: string) {
     };
 
     fetchConsultation();
-  }, [token, openModal]);
 
-  async function updateStatus(newStatus: ConsultationStatus) {
+    return () => { mounted = false; };
+  }, [token]);
+
+  async function updateStatus(updatedStatus: ConsultationStatus, router?: any) {
     if (!consultation) return;
 
     try {
-      const payload = {
-        id: consultation.id,
-        status: newStatus,
-      };
-
       const res = await fetch("/api/consultations", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ id: consultation.id, status: updatedStatus }),
       });
 
       if (!res.ok) throw new Error("Falha ao atualizar status");
 
-      setConsultation({ ...consultation, status: newStatus });
-    } catch (error) {
-      console.error("Erro ao atualizar status via API:", error);
-      throw error;
+      setConsultation({ ...consultation, status: updatedStatus });
+
+      closeModal();
+      router?.replace("/");
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   }
 
-  return { consultation, status, updateStatus };
+  function getConfirmAppointmentCallback(router: any) {
+    return () => {
+      if (consultation) {
+        onConfirmAppointment({
+          consultation,
+          onConfirm: (status) => updateStatus(status, router),
+        });
+      }
+    };
+  }
+
+  return { consultation, status, getConfirmAppointmentCallback };
 }
