@@ -1,6 +1,7 @@
 import { formatCPF, formatPhone } from "@/utils/formatters";
 import { ConsultationActions } from "./ConsultationActions";
 import { Consultation } from "@/models/consultation";
+import { useModal } from "@/contexts/ModalContext";
 
 const statusStyles: Record<Consultation["status"], string> = {
   Atendido: "bg-emerald-600/10 text-emerald-400",
@@ -13,19 +14,15 @@ type ConsultationTableProps = {
   consultations: Consultation[];
   loading: boolean;
   onDelete?: () => void;
-  setSelectedConsultation: React.Dispatch<
-    React.SetStateAction<Consultation | null>
-  >;
-  openModal: (type: "add" | "edit" | null) => void;
 };
 
 export const ConsultationTable = ({
   consultations,
   loading,
   onDelete,
-  setSelectedConsultation,
-  openModal,
 }: ConsultationTableProps) => {
+  const { onEdit } = useModal();
+
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow">
       {loading ? (
@@ -34,30 +31,14 @@ export const ConsultationTable = ({
         <table className="min-w-full table-auto border-collapse text-sm text-white">
           <thead className="bg-[#2A2A2A] text-gray-300">
             <tr>
-              <th scope="col" className="px-4 py-2 text-center">
-                Paciente
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                CPF
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                Profissional
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                Telefone
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                Tipo de Consulta
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                Data
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                Horário
-              </th>
-              <th scope="col" className="px-4 py-2 text-center">
-                Status
-              </th>
+              <th scope="col" className="px-4 py-2 text-center">Paciente</th>
+              <th scope="col" className="px-4 py-2 text-center">CPF</th>
+              <th scope="col" className="px-4 py-2 text-center">Profissional</th>
+              <th scope="col" className="px-4 py-2 text-center">Telefone</th>
+              <th scope="col" className="px-4 py-2 text-center">Tipo de Consulta</th>
+              <th scope="col" className="px-4 py-2 text-center">Data</th>
+              <th scope="col" className="px-4 py-2 text-center">Horário</th>
+              <th scope="col" className="px-4 py-2 text-center">Status</th>
               <ConsultationActions isHeader />
             </tr>
           </thead>
@@ -83,18 +64,10 @@ export const ConsultationTable = ({
                 return (
                   <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
                     <td className="px-4 py-2 text-center">{patientName}</td>
-                    <td className="px-4 py-2 text-center">
-                      {formatCPF(document)}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      {professionalName}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      {formatPhone(phoneNumber)}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      {consultationType}
-                    </td>
+                    <td className="px-4 py-2 text-center">{formatCPF(document)}</td>
+                    <td className="px-4 py-2 text-center">{professionalName}</td>
+                    <td className="px-4 py-2 text-center">{formatPhone(phoneNumber)}</td>
+                    <td className="px-4 py-2 text-center">{consultationType}</td>
                     <td className="px-4 py-2 text-center">{formattedDate}</td>
                     <td className="px-4 py-2 text-center">{formattedTime}</td>
                     <td className="px-4 py-2 text-center">
@@ -108,18 +81,15 @@ export const ConsultationTable = ({
                       id={id}
                       onDelete={onDelete}
                       onEdit={() => {
-                        const consultation = consultations.find(
-                          (c) => c.id === id,
-                        );
+                        const consultation = consultations.find((c) => c.id === id);
                         if (consultation) {
-                          setSelectedConsultation(consultation);
-                          openModal("edit");
+                          onEdit(consultation);
                         }
                       }}
                     />
                   </tr>
                 );
-              },
+              }
             )}
           </tbody>
         </table>

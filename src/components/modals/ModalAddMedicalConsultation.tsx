@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "../Modal";
-import { useModal } from "@/contexts/ModalContext";
-import { Consultation } from "@/models/consultation";
 import { formatCPF, formatPhone } from "@/utils/formatters";
 import { getTodayDate } from "@/utils/date";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import Select from "react-select";
 
 interface ModalAddMedicalConsultationProps {
-  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
+  onClose: () => void;
 }
 
 const consultationSchema = z.object({
@@ -32,25 +32,33 @@ const consultationSchema = z.object({
   time: z.string().min(1, "Horário é obrigatório"),
 });
 
-type ConsultationFormData = z.infer<typeof consultationSchema> & {
-  date: string;
-  time: string;
-};
+type ConsultationFormData = z.infer<typeof consultationSchema>;
+
+type Option = { value: string; label: string };
+
+const consultationOptions: Option[] = [
+  { value: "ced", label: "Consulta de Crescimento e Desenvolvimento (CeD)" },
+  { value: "citologia_oncotica", label: "Consulta para coleta de citologia oncótica" },
+  { value: "pre_natal", label: "Pré-natal" },
+  { value: "procedimentos", label: "Procedimentos" },
+];
 
 export const ModalAddMedicalConsultation = ({
-  setConsultations,
+  onClose,
 }: ModalAddMedicalConsultationProps) => {
-  const { modalType, closeModal } = useModal();
-
   const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<ConsultationFormData>({
-    resolver: zodResolver(consultationSchema),
-  });
+  control,
+  register,
+  handleSubmit,
+  reset,
+  setValue,
+  formState: { errors },
+} = useForm<ConsultationFormData>({
+  resolver: zodResolver(consultationSchema),
+  defaultValues: {
+    date: getTodayDate(),
+  },
+});
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
@@ -70,6 +78,12 @@ export const ModalAddMedicalConsultation = ({
       const cleanedPhone = phoneNumber.replace(/\D/g, "");
       const consultationDate = new Date(`${date}T${time}:00`);
 
+      const formattedDate = format(
+        consultationDate,
+        "dd 'de' MMMM 'às' HH:mm",
+        { locale: ptBR },
+      );
+
       const response = await fetch("/api/consultations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,9 +98,37 @@ export const ModalAddMedicalConsultation = ({
 
       if (response.ok) {
         const newConsultation = await response.json();
-        setConsultations((prev) => [newConsultation, ...prev]);
-        closeModal();
+        const confirmationToken = newConsultation.confirmationToken;
+
+        onClose();
         reset();
+
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL ||
+          "https://healapp-prototype.netlify.app";
+        const normalizedUrl = baseUrl.startsWith("http")
+          ? baseUrl
+          : `https://${baseUrl}`;
+
+        const whatsappMessageRaw = [
+          `👋 *Olá ${data.patientName}!*`,
+          `📅 *Consulta:* ${formattedDate}`,
+          `📍Confirme sua presença acessando o link abaixo:`,
+          `${normalizedUrl}/confirm/${confirmationToken}`,
+          "Após a confirmação, você pode acompanhar a fila de espera no link a seguir:",
+          normalizedUrl,
+        ].join("\n\n");
+
+        const encodedMessage = encodeURIComponent(whatsappMessageRaw);
+
+        const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+        const baseUrlWhatsapp = isMobile
+          ? "https://api.whatsapp.com/send"
+          : "https://web.whatsapp.com/send";
+
+        const whatsappURL = `${baseUrlWhatsapp}?phone=55${cleanedPhone}&text=${encodedMessage}`;
+
+        window.open(whatsappURL, "_blank");
       } else {
         const error = await response.json();
         console.error("Erro:", error.error);
@@ -95,15 +137,6 @@ export const ModalAddMedicalConsultation = ({
       console.error("Erro ao enviar consulta:", error);
     }
   };
-
-  useEffect(() => {
-    if (modalType === "add") {
-      setValue("date", getTodayDate());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalType]);
-
-  if (modalType !== "add") return null;
 
   return (
     <Modal>
@@ -157,11 +190,21 @@ export const ModalAddMedicalConsultation = ({
               <label htmlFor="consultationType" className="mb-1 text-black">
                 Tipo de consulta
               </label>
-              <input
-                id="consultationType"
-                {...register("consultationType")}
-                className="w-full rounded border px-3 py-2 text-black"
-                placeholder="Tipo de consulta"
+              <Controller
+                name="consultationType"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={consultationOptions}
+                    placeholder="Selecione o tipo de consulta"
+                    className="w-full rounded border py-[1px] text-black"
+                    classNamePrefix="react-select"
+                    value={consultationOptions.find(
+                      (option) => option.value === field.value,
+                    )}
+                    onChange={(option) => field.onChange(option?.value)}
+                  />
+                )}
               />
               {errors.consultationType && (
                 <p className="text-red-600 text-sm mt-1">
@@ -266,7 +309,7 @@ export const ModalAddMedicalConsultation = ({
             type="button"
             onClick={() => {
               reset();
-              closeModal();
+              onClose();
             }}
             className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-400 cursor-pointer"
           >

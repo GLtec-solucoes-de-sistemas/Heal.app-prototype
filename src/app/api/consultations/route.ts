@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { adminFirestore } from "@/lib/firebase-admin";
+import { v4 as uuidv4 } from "uuid";
 
 export async function GET() {
   try {
@@ -62,6 +63,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const confirmationToken = uuidv4();
+
     const consultationRef = await adminFirestore
       .collection("consultations")
       .add({
@@ -73,6 +76,7 @@ export async function POST(req: NextRequest) {
         phoneNumber,
         professionalName,
         status,
+        confirmationToken,
       });
 
     const createdDoc = await consultationRef.get();
@@ -83,6 +87,7 @@ export async function POST(req: NextRequest) {
       ...createdData,
       consultationDate:
         createdData?.consultationDate?.toDate().toISOString() || null,
+      confirmationToken,
     });
   } catch (error) {
     console.error("Erro ao criar consulta:", error);
@@ -119,6 +124,7 @@ export async function DELETE(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
+
     const { id, ...updateData } = body;
 
     if (!id || Object.keys(updateData).length === 0) {
@@ -138,16 +144,17 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    await consultationRef.update({
-      ...updateData,
-      consultationDate: updateData.consultationDate
-        ? Timestamp.fromDate(new Date(updateData.consultationDate))
-        : undefined,
-    });
+    if (updateData.consultationDate) {
+      updateData.consultationDate = Timestamp.fromDate(
+        new Date(updateData.consultationDate),
+      );
+    }
+
+    await consultationRef.update(updateData);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Erro ao atualizar consulta:", error);
+    console.error("[API] Erro ao atualizar consulta:", error);
     return NextResponse.json(
       { error: "Erro ao atualizar consulta" },
       { status: 500 },
