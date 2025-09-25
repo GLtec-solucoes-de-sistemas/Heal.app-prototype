@@ -2,8 +2,8 @@
 
 import { Pencil, Trash } from "lucide-react";
 import { useState } from "react";
-import { ConfirmModal } from "./modals/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
+import { useModal } from "../contexts/ModalContext";
 
 type ConsultationActionsProps = {
   id?: string;
@@ -19,8 +19,8 @@ export const ConsultationActions = ({
   isHeader = false,
 }: ConsultationActionsProps) => {
   const { user, loading } = useAuth();
+  const { onConfirm } = useModal();
   const [isLoading, setIsLoading] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   if (!user || loading) return null;
 
@@ -48,7 +48,6 @@ export const ConsultationActions = ({
         throw new Error(error.error || "Erro ao deletar consulta");
       }
 
-      setShowConfirm(false);
       onDelete?.();
     } catch (error) {
       console.error("Erro ao deletar consulta:", error);
@@ -69,21 +68,18 @@ export const ConsultationActions = ({
         </button>
         <button
           aria-label="Excluir consulta"
-          onClick={() => setShowConfirm(true)}
+          onClick={() =>
+            onConfirm({
+              text: "desmarcar",
+              action: handleDeleteConsultation,
+              isLoading,
+            })
+          }
           className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
         >
           <Trash size={16} />
         </button>
       </div>
-
-      {showConfirm && (
-        <ConfirmModal
-          text="desmarcar"
-          function={handleDeleteConsultation}
-          isLoading={isLoading}
-          onClose={() => setShowConfirm(false)}
-        />
-      )}
     </td>
   );
 };

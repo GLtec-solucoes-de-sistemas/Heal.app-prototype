@@ -1,50 +1,66 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { ConsultationTable } from '@/components/ConsultationTable';
-import { ModalAddMedicalConsultation } from '@/components/modals/ModalMedicalConsultation';
-import { useModal } from '@/contexts/ModalContext';
-import { Consultation } from '@/models/consultation';
-import { useRouter } from 'next/navigation';
-import { ModalEditMedicalConsultation } from '@/components/modals/ModalEditMedicalConsultation';
-import { ConsultationFilters } from '@/components/ConsultationFilters';
+import { useEffect, useState, useMemo } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ConsultationTable } from "@/components/ConsultationTable";
+import { useModal } from "@/contexts/ModalContext";
+import { Consultation } from "@/models/consultation";
+import { useRouter } from "next/navigation";
+import { ConsultationFilters } from "@/components/ConsultationFilters";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function DashboardPage() {
-  const { openModal, modalType } = useModal();
+  const { onAdd } = useModal();
   const { logout, loading, user } = useAuth();
   const router = useRouter();
 
   const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [selectedConsultation, setSelectedConsultation] =
-    useState<Consultation | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [filters, setFilters] = useState({
-    patientName: '',
-    email: '',
-    cpf: '',
-    consultationType: '',
-    professionalName: '',
-    startDate: '',
-    endDate: '',
+    patientName: "",
+    email: "",
+    cpf: "",
+    consultationType: "",
+    professionalName: "",
+    startDate: "",
+    endDate: "",
   });
 
-  const fetchConsultations = async () => {
-    try {
-      const response = await fetch('/api/consultations');
-      if (!response.ok) throw new Error('Erro ao buscar consultas');
-      const data = await response.json();
-      setConsultations(data);
-    } catch (error) {
-      console.error('Erro ao buscar consultas:', error);
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
   useEffect(() => {
-    fetchConsultations();
+    const consultationsRef = collection(db, "consultations");
+
+    const unsubscribe = onSnapshot(
+      consultationsRef,
+      (snapshot) => {
+        const consultationsData = snapshot.docs.map((doc) => {
+          const data = doc.data();
+
+          return {
+            id: doc.id,
+            consultationType: data.consultationType ?? "",
+            document: data.document ?? "",
+            email: data.email ?? "",
+            patientName: data.patientName ?? "",
+            phoneNumber: data.phoneNumber ?? "",
+            professionalName: data.professionalName ?? "",
+            consultationDate:
+              data.consultationDate?.toDate?.().toISOString() ?? "",
+            status: data.status ?? "Pendente",
+          };
+        });
+
+        setConsultations(consultationsData);
+        setIsLoadingData(false);
+      },
+      (error) => {
+        console.error("Erro ao escutar consultas:", error);
+        setIsLoadingData(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   const filteredConsultations = useMemo(() => {
@@ -57,22 +73,21 @@ export default function DashboardPage() {
 
       const matchesCpf = filters.cpf
         ? consultation.document
-            .replace(/\D/g, '')
-            .includes(filters.cpf.replace(/\D/g, ''))
+            .replace(/\D/g, "")
+            .includes(filters.cpf.replace(/\D/g, ""))
         : true;
 
       const matchesDate = (() => {
         if (!filters.startDate && !filters.endDate) return true;
 
         const consultationDate = new Date(consultation.consultationDate);
-        const consultationDay = consultationDate.toISOString().split('T')[0];
+        const consultationDay = consultationDate.toISOString().split("T")[0];
 
         const startDay = filters.startDate
-          ? new Date(filters.startDate).toISOString().split('T')[0]
+          ? new Date(filters.startDate).toISOString().split("T")[0]
           : null;
-
         const endDay = filters.endDate
-          ? new Date(filters.endDate).toISOString().split('T')[0]
+          ? new Date(filters.endDate).toISOString().split("T")[0]
           : null;
 
         return (
@@ -117,7 +132,7 @@ export default function DashboardPage() {
         {user && !loading && (
           <div className="flex space-x-4">
             <button
-              onClick={() => openModal('add')}
+              onClick={onAdd}
               className="bg-white text-teal-600 hover:bg-gray-200 px-4 py-2 rounded text-sm cursor-pointer"
             >
               + Adicionar Consulta
@@ -127,17 +142,17 @@ export default function DashboardPage() {
               disabled={loading}
               className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-sm cursor-pointer"
             >
-              {loading ? 'Saindo…' : 'Sair'}
+              {loading ? "Saindo…" : "Sair"}
             </button>
           </div>
         )}
         {!user && !loading && (
           <button
-            onClick={() => router.replace('/login')}
+            onClick={() => router.replace("/login")}
             disabled={loading}
             className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-sm cursor-pointer"
           >
-            {loading ? 'Redirecionando...' : 'Entrar'}
+            {loading ? "Redirecionando..." : "Entrar"}
           </button>
         )}
       </header>
@@ -149,9 +164,6 @@ export default function DashboardPage() {
             <ConsultationTable
               consultations={filteredConsultations}
               loading={isLoadingData}
-              onDelete={fetchConsultations}
-              setSelectedConsultation={setSelectedConsultation}
-              openModal={openModal}
             />
           </div>
         </div>
@@ -160,16 +172,6 @@ export default function DashboardPage() {
       <footer className="bg-[#1E1E1E] text-center text-sm text-gray-400 py-3">
         © 2025 Heal.app — Todos os direitos reservados
       </footer>
-
-      <ModalAddMedicalConsultation setConsultations={setConsultations} />
-
-      {selectedConsultation && modalType === 'edit' && (
-        <ModalEditMedicalConsultation
-          selectedConsultation={selectedConsultation}
-          setConsultations={setConsultations}
-          onClose={() => setSelectedConsultation(null)}
-        />
-      )}
     </div>
   );
 }

@@ -1,41 +1,28 @@
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+"use client";
 
-export default async function ConfirmPage({ params }: { params: { token: string } }) {
-  const { token } = params;
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useConfirmConsultation } from "./useConfirmConsultation";
 
-  const q = query(
-    collection(db, 'consultations'),
-    where('confirmationToken', '==', token)
-  );
-  const snapshot = await getDocs(q);
+export default function ConfirmPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = use(params);
+  const router = useRouter();
+  const { consultation, status, getConfirmAppointmentCallback } = useConfirmConsultation(token);
 
-  let status: 'success' | 'error';
+  const [modalOpened, setModalOpened] = useState(false);
 
-  if (!snapshot.empty) {
-    const docRef = snapshot.docs[0].ref;
-    await updateDoc(docRef, { status: 'Aguardando' });
-    status = 'success';
-  } else {
-    status = 'error';
-  }
+  useEffect(() => {
+    if (status === "success" && consultation && !modalOpened) {
+      const openModal = getConfirmAppointmentCallback(router);
+      openModal();
+      setModalOpened(true);
+    }
+  }, [status, consultation, modalOpened, getConfirmAppointmentCallback, router]);
 
   return (
     <div className="p-10 text-center">
-      {status === 'success' && (
-        <p className="text-green-600">✅ Consulta confirmada!</p>
-      )}
-      {status === 'error' && (
-        <p className="text-red-600">
-          ❌ Link inválido ou consulta não encontrada.
-        </p>
-      )}
+      {status === "loading" && <p>Carregando...</p>}
+      {status === "error" && <p className="text-red-600">❌ Link inválido ou consulta não encontrada.</p>}
     </div>
   );
 }

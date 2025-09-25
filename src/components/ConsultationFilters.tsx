@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { User, Mail, IdCard, Stethoscope } from 'lucide-react';
+import { User, Mail, IdCard, Stethoscope } from "lucide-react";
 
 type FiltersType = {
   patientName: string;
@@ -22,7 +22,7 @@ const InputWithIcon = ({
   placeholder,
   value,
   onChange,
-  type = 'text',
+  type = "text",
 }: {
   icon: React.ElementType;
   placeholder: string;
