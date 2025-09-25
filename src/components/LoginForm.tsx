@@ -32,7 +32,7 @@ export const LoginForm = () => {
       const { user } = await signInWithEmailAndPassword(
         auth,
         data.email,
-        data.password,
+        data.password
       );
 
       const idToken = await user.getIdToken(true);

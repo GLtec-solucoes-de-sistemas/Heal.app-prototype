@@ -1,0 +1,48 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+input CreateUserInput {
+  email: String!
+  name: String!
+  password: String!
+  role: UserRole!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Mutation {
+  createUser(payload: CreateUserInput!): User!
+}
+
+type Query {
+  hello: String!
+}
+
+type User {
+  """Data de criação"""
+  createdAt: DateTime!
+  """Data que a usuario foi deletado"""
+  deletedAt: DateTime
+  """e-mail do usuário"""
+  email: String!
+  id: ID!
+  """Nome do usuário"""
+  name: String!
+  """Token de atualização do usuário"""
+  refreshToken: String
+  """Função do usuário"""
+  role: String!
+  """Data de modificação"""
+  updatedAt: DateTime!
+}
+
+"""Possíveis funções do usuário"""
+enum UserRole {
+  admin
+  healthcare
+}

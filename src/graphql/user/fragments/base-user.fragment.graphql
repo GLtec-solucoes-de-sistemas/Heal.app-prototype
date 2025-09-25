@@ -1,0 +1,10 @@
+fragment BaseUser on User {
+  id
+  name
+  email
+  role
+  createdAt
+  deletedAt
+  refreshToken
+  updatedAt
+}
