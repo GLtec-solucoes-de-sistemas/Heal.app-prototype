@@ -12,7 +12,7 @@ type FormData = {
   password: string;
 };
 
-export const LoginForm = () => {
+export const LoginForm = ({ onForgotPassword }: { onForgotPassword: () => void }) => {
   const {
     register,
     handleSubmit,
@@ -20,7 +20,6 @@ export const LoginForm = () => {
   } = useForm<FormData>();
 
   const [showPassword, setShowPassword] = useState(false);
-
   const router = useRouter();
 
   const togglePasswordVisibility = () => {
@@ -36,7 +35,6 @@ export const LoginForm = () => {
       );
 
       const idToken = await user.getIdToken(true);
-
       router.push("/");
       return idToken;
     } catch (err) {
@@ -56,14 +54,14 @@ export const LoginForm = () => {
       <div className="space-y-1">
         <div className="relative h-[42px]">
           <Mail
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             size={18}
           />
           <input
             type="email"
             placeholder="E-mail"
             {...register("email", { required: "E-mail é obrigatório" })}
-            className={`w-full h-full pl-10 pr-3 py-2 rounded-md text-[#4C505E] outline-none focus:ring-2 focus:ring-[#009388] placeholder-gray-400`}
+            className="w-full h-full pl-10 pr-3 py-2 rounded-md text-[#4C505E] outline-none focus:ring-2 focus:ring-[#009388] placeholder-gray-400"
           />
         </div>
         {errors.email && (
@@ -74,34 +72,36 @@ export const LoginForm = () => {
       <div className="space-y-1">
         <div className="relative h-[42px]">
           <Lock
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             size={18}
           />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Senha"
             {...register("password", { required: "Senha é obrigatória" })}
-            className={`w-full h-full pl-10 pr-10 py-2 rounded-md text-[#4C505E] outline-none focus:ring-2 focus:ring-[#009388] placeholder-gray-400`}
+            className="w-full h-full pl-10 pr-10 py-2 rounded-md text-[#4C505E] outline-none focus:ring-2 focus:ring-[#009388] placeholder-gray-400"
           />
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
         {errors.password && (
-          <span className="text-red-500 text-xs">
-            {errors.password.message}
-          </span>
+          <span className="text-red-500 text-xs">{errors.password.message}</span>
         )}
       </div>
 
       <div>
-        <a href="#" className="text-sm text-[#606370] hover:text-[#00796d]">
-          Esqueceu sua senha?
-        </a>
+        <button
+          type="button"
+          onClick={onForgotPassword}
+          className="text-sm text-[#606370] cursor-pointer hover:text-[#00796d]"
+        >
+          Esqueci minha senha
+        </button>
       </div>
 
       <button
