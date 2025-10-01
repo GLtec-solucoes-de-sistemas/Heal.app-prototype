@@ -61,11 +61,9 @@ export const LoginForm = () => {
           />
           <input
             type="email"
-            placeholder="E-MAIL"
+            placeholder="E-mail"
             {...register("email", { required: "E-mail é obrigatório" })}
-            className={`w-full h-full pl-10 pr-3 py-2 rounded-md bg-[#2A2A2A] text-white border ${
-              errors.email ? "border-red-500" : "border-gray-600"
-            } outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-400`}
+            className={`w-full h-full pl-10 pr-3 py-2 rounded-md text-[#4C505E] outline-none focus:ring-2 focus:ring-[#009388] placeholder-gray-400`}
           />
         </div>
         {errors.email && (
@@ -81,11 +79,9 @@ export const LoginForm = () => {
           />
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="SENHA"
+            placeholder="Senha"
             {...register("password", { required: "Senha é obrigatória" })}
-            className={`w-full h-full pl-10 pr-10 py-2 rounded-md bg-[#2A2A2A] text-white border ${
-              errors.password ? "border-red-500" : "border-gray-600"
-            } outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-400`}
+            className={`w-full h-full pl-10 pr-10 py-2 rounded-md text-[#4C505E] outline-none focus:ring-2 focus:ring-[#009388] placeholder-gray-400`}
           />
           <button
             type="button"
@@ -102,9 +98,15 @@ export const LoginForm = () => {
         )}
       </div>
 
+      <div>
+        <a href="#" className="text-sm text-[#606370] hover:text-[#00796d]">
+          Esqueceu sua senha?
+        </a>
+      </div>
+
       <button
         type="submit"
-        className="w-full bg-[#00B09B] hover:bg-[#009688] text-white py-2 rounded-md font-medium transition-colors cursor-pointer"
+        className="w-full bg-[#009388] hover:bg-[#00796d] text-white py-2 rounded-md font-medium transition-colors cursor-pointer"
       >
         Entrar
       </button>
