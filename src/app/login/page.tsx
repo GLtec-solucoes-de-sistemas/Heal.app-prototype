@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoginForm } from "@/components/LoginForm";
 import { ForgotPasswordForm } from "@/components/ForgotPasswordForm";
+import { CreateAccount } from "@/components/CreateAccount";
 import Image from "next/image";
 import loginPage from "../../../public/loginPage.svg";
 import loginTitle from "../../../public/loginTitle.svg";
@@ -71,8 +72,20 @@ const LoginPage = () => {
             </h2>
           )}
 
-          {view === "login" && <LoginForm onForgotPassword={() => setView("forgot")} />}
-          {view === "forgot" && <ForgotPasswordForm onBack={() => setView("login")} onSent={() => setView("sent")} />}
+          {view === "login" && (
+            <>
+              <LoginForm onForgotPassword={() => setView("forgot")} />
+              <CreateAccount />
+            </>
+          )}
+
+          {view === "forgot" && (
+            <ForgotPasswordForm
+              onBack={() => setView("login")}
+              onSent={() => setView("sent")}
+            />
+          )}
+
           {view === "sent" && (
             <div className="w-full max-w-[400px] space-y-6 font-sans text-sm text-center">
               <p className="text-[#009388] text-base">E-mail enviado com sucesso!</p>

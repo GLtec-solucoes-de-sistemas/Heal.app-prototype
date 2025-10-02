@@ -98,7 +98,7 @@ export const LoginForm = ({ onForgotPassword }: { onForgotPassword: () => void }
         <button
           type="button"
           onClick={onForgotPassword}
-          className="text-sm text-[#606370] cursor-pointer hover:text-[#00796d]"
+          className="text-sm text-[#606370] cursor-pointer hover:text-[#00796d] hover:underline"
         >
           Esqueci minha senha
         </button>
