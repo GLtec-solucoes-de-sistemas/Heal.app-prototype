@@ -35,7 +35,7 @@ export const LoginForm = ({ onForgotPassword }: { onForgotPassword: () => void }
       );
 
       const idToken = await user.getIdToken(true);
-      router.push("/");
+      router.push("/dashboard");
       return idToken;
     } catch (err) {
       if (err instanceof Error) {
