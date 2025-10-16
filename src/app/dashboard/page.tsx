@@ -21,7 +21,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 text-gray-900">
+    <div className="h-screen mt-5 px-5 flex flex-col items-center justify-start bg-gray-50 text-gray-900">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <CardHome
           title="Consultas Marcadas"
