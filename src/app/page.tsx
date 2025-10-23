@@ -183,22 +183,36 @@ export default function ConsultationsPage() {
           </div>
 
           {isFilterModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="bg-zinc-800 p-6 rounded-lg shadow max-w-lg w-full">
-                <h2 className="text-lg font-semibold mb-4 text-white">Filtrar Consultas</h2>
-                <ConsultationFilters filters={filters} setFilters={setFilters} />
-                <div className="flex justify-end mt-4 gap-2">
-                  <button
-                    onClick={() => setIsFilterModalOpen(false)}
-                    className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 text-white"
-                  >
-                    Fechar
-                  </button>
-                </div>
+            <div className="fixed top-4 right-4 z-50 w-[350px] bg-white rounded-lg p-4">
+              
+              <ConsultationFilters filters={filters} setFilters={setFilters} />
+              <div className="flex justify-end mt-4 gap-2">
+                <button
+                  onClick={() => {
+                    setFilters({
+                      patientName: "",
+                      email: "",
+                      cpf: "",
+                      consultationType: "",
+                      professionalName: "",
+                      startDate: "",
+                      endDate: "",
+                    });
+                  }}
+                  className="px-3 py-1.5 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm transition"
+                >
+                  Limpar filtros
+                </button>
+
+                <button
+                  onClick={() => setIsFilterModalOpen(false)}
+                  className="px-3 py-1.5 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm transition"
+                >
+                  Fechar
+                </button>
               </div>
             </div>
           )}
-
           <div className="flex flex-col lg:flex-row gap-6 border border-[#09121C1A] rounded-lg">
             <div className="lg:w-1/3">
               <ConsultationCalendar
@@ -223,7 +237,7 @@ export default function ConsultationsPage() {
           </div>
         </main>
 
-        <footer className="bg-[#1E1E1E] text-center text-sm text-gray-400 py-3">
+        <footer className="text-center text-sm text-gray-400 py-3">
           © 2025 Heal.app — Todos os direitos reservados
         </footer>
       </div>
