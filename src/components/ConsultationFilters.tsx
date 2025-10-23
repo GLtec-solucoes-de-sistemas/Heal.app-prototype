@@ -75,7 +75,7 @@ const DateRangeInput = ({
 
 export const ConsultationFilters = ({ filters, setFilters }: Props) => {
   return (
-    <div className="bg-zinc-800 p-4 rounded-lg shadow w-full max-w-xs space-y-4">
+    <div className="bg-zinc-800 p-6 rounded-lg shadow w-full space-y-4 text-white">
       <DateRangeInput
         startDate={filters.startDate}
         endDate={filters.endDate}
@@ -119,10 +119,7 @@ export const ConsultationFilters = ({ filters, setFilters }: Props) => {
         placeholder="Buscar por profissional"
         value={filters.professionalName}
         onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            professionalName: e.target.value,
-          }))
+          setFilters((prev) => ({ ...prev, professionalName: e.target.value }))
         }
       />
 
@@ -131,10 +128,7 @@ export const ConsultationFilters = ({ filters, setFilters }: Props) => {
         placeholder="Tipo de consulta"
         value={filters.consultationType}
         onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            consultationType: e.target.value,
-          }))
+          setFilters((prev) => ({ ...prev, consultationType: e.target.value }))
         }
       />
     </div>

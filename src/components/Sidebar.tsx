@@ -64,7 +64,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
         onClick={() => !isMobile && setOpen(!open)}
         className={`
           fixed top-0 left-0 h-full bg-[#009388] text-white flex flex-col
-          border-r border-[#007766] transition-all duration-500 ease-in-out z-40
+          transition-all duration-500 ease-in-out z-40
           ${isMobile
             ? open
               ? "translate-x-0 w-64"
