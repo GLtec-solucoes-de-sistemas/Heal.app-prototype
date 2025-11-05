@@ -74,7 +74,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
             : "w-16"}
         `}
       >
-        <div className="flex justify-center mt-6 mb-10 select-none pointer-events-none">
+        <div className="flex justify-center mt-2 mb-9 select-none pointer-events-none">
           <div className="relative w-56 h-20 transition-all duration-500 ease-in-out">
             <Image
               src={open || isMobile ? sidebarIcon : subSidebarIcon}
@@ -87,7 +87,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
 
         <nav
           onClick={(e) => e.stopPropagation()}
-          className="flex flex-col gap-2 mt-4 transition-all duration-500"
+          className="flex flex-col gap-2 transition-all duration-500"
         >
           {items.map((item) => {
             const active = pathname === item.path;
@@ -100,13 +100,13 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                   if (isMobile) setOpen(false);
                 }}
                 className={`
-                  flex items-center h-12 w-full rounded-lg font-medium
+                  flex items-center h-12 mx-2 rounded-lg font-light text-sm
                   hover:bg-[#3B695B] transition-all duration-500
                   ${active ? "bg-[#3B695B]" : ""}
                   ${open ? "justify-start px-4" : "justify-center px-0"}
                 `}
               >
-                <div className="flex items-center justify-center w-6 h-6 flex-shrink-0">
+                <div className="flex w-6 h-6">
                   <item.icon className="w-6 h-6" />
                 </div>
                 <span
