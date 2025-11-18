@@ -1,18 +1,40 @@
 "use client";
 
+import React, { useEffect } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { Modal } from "./Modal";
+import { Consultation, ConsultationStatus } from "@/models/consultation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Modal } from "../Modal";
 import { formatCPF, formatPhone } from "@/utils/formatters";
-import { getTodayDate } from "@/utils/date";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import Select from "react-select";
 
-interface ModalAddMedicalConsultationProps {
+interface ModalEditMedicalConsultationProps {
+  consultation: Consultation;
   onClose: () => void;
 }
+
+type ConsultationFormData = Omit<Consultation, "id" | "consultationDate"> & {
+  date: string;
+  time: string;
+  status: ConsultationStatus;
+};
+
+type Option = { value: string; label: string };
+
+const consultationOptions: Option[] = [
+  { value: "ced", label: "Consulta de Crescimento e Desenvolvimento (CeD)" },
+  { value: "citologia_oncotica", label: "Consulta para coleta de citologia oncótica" },
+  { value: "pre_natal", label: "Pré-natal" },
+  { value: "procedimentos", label: "Procedimentos" },
+];
+
+const statusOptions: Option[] = [
+  { value: "Confirmação Pendente", label: "Confirmação Pendente" },
+  { value: "Atendido", label: "Atendido" },
+  { value: "Cancelado", label: "Cancelado" },
+  { value: "Aguardando", label: "Aguardando" },
+];
 
 const consultationSchema = z.object({
   document: z
@@ -24,41 +46,77 @@ const consultationSchema = z.object({
   patientName: z.string().min(1, "Nome do paciente é obrigatório"),
   phoneNumber: z
     .string()
-    .regex(
-      /^\(\d{2}\) \d{4,5}-\d{4}$/,
-      "Telefone deve estar no formato (99) 9 9999-9999",
-    ),
+    .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, "Telefone inválido"),
   professionalName: z.string().min(1, "Nome do profissional é obrigatório"),
   time: z.string().min(1, "Horário é obrigatório"),
+  status: z.enum([
+    "Atendido",
+    "Cancelado",
+    "Aguardando",
+    "Confirmação Pendente",
+  ]),
 });
 
-type ConsultationFormData = z.infer<typeof consultationSchema>;
-
-type Option = { value: string; label: string };
-
-const consultationOptions: Option[] = [
-  { value: "ced", label: "Consulta de Crescimento e Desenvolvimento (CeD)" },
-  { value: "citologia_oncotica", label: "Consulta para coleta de citologia oncótica" },
-  { value: "pre_natal", label: "Pré-natal" },
-  { value: "procedimentos", label: "Procedimentos" },
-];
-
-export const ModalAddMedicalConsultation = ({
+export function ModalEditMedicalConsultation({
+  consultation,
   onClose,
-}: ModalAddMedicalConsultationProps) => {
+}: ModalEditMedicalConsultationProps) {
   const {
-  control,
-  register,
-  handleSubmit,
-  reset,
-  setValue,
-  formState: { errors },
-} = useForm<ConsultationFormData>({
-  resolver: zodResolver(consultationSchema),
-  defaultValues: {
-    date: getTodayDate(),
-  },
-});
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<ConsultationFormData>({
+    resolver: zodResolver(consultationSchema),
+  });
+
+  useEffect(() => {
+    if (consultation) {
+      const dateObj = new Date(consultation.consultationDate);
+      const date = dateObj.toISOString().slice(0, 10);
+      const time = dateObj.toTimeString().slice(0, 5);
+
+      setValue("patientName", consultation.patientName);
+      setValue("document", formatCPF(consultation.document));
+      setValue("email", consultation.email);
+      setValue("phoneNumber", formatPhone(consultation.phoneNumber));
+      setValue("professionalName", consultation.professionalName);
+      setValue("consultationType", consultation.consultationType);
+      setValue("date", date);
+      setValue("time", time);
+      setValue("status", consultation.status);
+    }
+  }, [consultation, setValue]);
+
+  const handleEditConsultation: SubmitHandler<ConsultationFormData> = async (data) => {
+    if (!consultation) return;
+
+    try {
+      const { date, time, document, phoneNumber, ...rest } = data;
+      const cleanedCPF = document.replace(/\D/g, "");
+      const cleanedPhone = phoneNumber.replace(/\D/g, "");
+      const consultationDate = new Date(`${date}T${time}:00`);
+
+      await fetch("/api/consultations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: consultation.id,
+          ...rest,
+          document: cleanedCPF,
+          phoneNumber: cleanedPhone,
+          consultationDate,
+        }),
+      });
+
+      reset();
+      onClose();
+    } catch (error) {
+      console.error("Erro ao atualizar consulta:", error);
+    }
+  };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = formatCPF(e.target.value);
@@ -70,84 +128,21 @@ export const ModalAddMedicalConsultation = ({
     setValue("phoneNumber", e.target.value);
   };
 
-  const onSubmit: SubmitHandler<ConsultationFormData> = async (data) => {
-    try {
-      const { date, time, document, phoneNumber, ...rest } = data;
-
-      const cleanedCPF = document.replace(/\D/g, "");
-      const cleanedPhone = phoneNumber.replace(/\D/g, "");
-      const consultationDate = new Date(`${date}T${time}:00`);
-
-      const formattedDate = format(
-        consultationDate,
-        "dd 'de' MMMM 'às' HH:mm",
-        { locale: ptBR },
-      );
-
-      const response = await fetch("/api/consultations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...rest,
-          document: cleanedCPF,
-          phoneNumber: cleanedPhone,
-          consultationDate,
-          status: "Confirmação Pendente",
-        }),
-      });
-
-      if (response.ok) {
-        const newConsultation = await response.json();
-        const confirmationToken = newConsultation.confirmationToken;
-
-        onClose();
-        reset();
-
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL ||
-          "https://healapp-prototype.netlify.app";
-        const normalizedUrl = baseUrl.startsWith("http")
-          ? baseUrl
-          : `https://${baseUrl}`;
-
-        const whatsappMessageRaw = [
-          `👋 *Olá ${data.patientName}!*`,
-          `📅 *Consulta:* ${formattedDate}`,
-          `📍Confirme sua presença acessando o link abaixo:`,
-          `${normalizedUrl}/confirm/${confirmationToken}`,
-          "Após a confirmação, você pode acompanhar a fila de espera no link a seguir:",
-          normalizedUrl,
-        ].join("\n\n");
-
-        const encodedMessage = encodeURIComponent(whatsappMessageRaw);
-
-        const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
-        const baseUrlWhatsapp = isMobile
-          ? "https://api.whatsapp.com/send"
-          : "https://web.whatsapp.com/send";
-
-        const whatsappURL = `${baseUrlWhatsapp}?phone=55${cleanedPhone}&text=${encodedMessage}`;
-
-        window.open(whatsappURL, "_blank");
-      } else {
-        const error = await response.json();
-        console.error("Erro:", error.error);
-      }
-    } catch (error) {
-      console.error("Erro ao enviar consulta:", error);
-    }
-  };
+  if (!open) return null;
 
   return (
     <Modal>
       <h2 className="text-black text-center text-xl font-semibold mb-2">
-        Cadastro de paciente
+        Editar dados do paciente
       </h2>
       <span className="text-black flex justify-center mb-4">
-        Adicione as informações do paciente para adicioná-lo à lista.
+        Altere as informações necessárias e salve as alterações.
       </span>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(handleEditConsultation)}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
@@ -159,7 +154,7 @@ export const ModalAddMedicalConsultation = ({
                 {...register("document")}
                 onChange={handleCPFChange}
                 className="w-full rounded border px-3 py-2 text-black"
-                placeholder="Digite o CPF do paciente"
+                placeholder="Digite seu CPF"
               />
               {errors.document && (
                 <p className="text-red-600 text-sm mt-1">
@@ -259,7 +254,7 @@ export const ModalAddMedicalConsultation = ({
                 {...register("phoneNumber")}
                 onChange={handlePhoneChange}
                 className="w-full rounded border px-3 py-2 text-black"
-                placeholder="(99) 9 9999-9999"
+                placeholder="(XX) XXXXX-XXXX"
               />
               {errors.phoneNumber && (
                 <p className="text-red-600 text-sm mt-1">
@@ -304,6 +299,31 @@ export const ModalAddMedicalConsultation = ({
           </div>
         </div>
 
+        <div>
+          <label htmlFor="status" className="mb-1 text-black">
+            Status
+          </label>
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={statusOptions}
+                placeholder="Selecione o status da consulta"
+                className="w-full rounded border py-[1px] text-black"
+                classNamePrefix="react-select"
+                value={statusOptions.find(
+                  (option) => option.value === field.value,
+                )}
+                onChange={(option) => field.onChange(option?.value)}
+              />
+            )}
+          />
+          {errors.status && (
+            <p className="text-red-600 text-sm mt-1">{errors.status.message}</p>
+          )}
+        </div>
+
         <div className="flex justify-center space-x-2">
           <button
             type="button"
@@ -319,10 +339,10 @@ export const ModalAddMedicalConsultation = ({
             type="submit"
             className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
           >
-            Cadastrar
+            Salvar
           </button>
         </div>
       </form>
     </Modal>
   );
-};
+}

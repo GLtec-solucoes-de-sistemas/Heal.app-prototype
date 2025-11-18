@@ -8,7 +8,7 @@ import {
 import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
-// import * as session from '../session'; // quando integrar com seu sistema de auth
+import { deleteCookie } from 'cookies-next';
 
 export function createSimpleClient() {
   const httpLink = new HttpLink({
@@ -46,6 +46,12 @@ export function createClient(
   // });
 
   const errorLink = new ErrorLink(({ error }) => {
+    const handleLogout = () => {
+      if (typeof window !== "undefined") {
+        deleteCookie("accessToken");
+        window.location.href = "/login";
+      }
+    };
     // Verifica se é um erro GraphQL
     if (CombinedGraphQLErrors.is(error)) {
       error.errors.forEach((gqlError) => {
@@ -54,12 +60,7 @@ export function createClient(
           gqlError.extensions?.status === 401 ||
           gqlError.message === 'Forbidden resource'
         ) {
-          // session.logout(); // descomente quando integrar
-          // Por enquanto, apenas limpe o token local
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-          }
+          handleLogout()
         }
 
         console.log(
@@ -73,26 +74,27 @@ export function createClient(
       // Se for erro 401/403 baseado na mensagem
       if (error.message.includes('401') || error.message.includes('403') ||
         error.message.includes('Unauthorized') || error.message.includes('Forbidden')) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-        }
+        handleLogout()
       }
     }
   });
 
   const authLink = new SetContextLink((prevContext) => {
-    // Pega o token do localStorage (ou do seu sistema de session)
-    // const token = session.getToken(); // quando integrar
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== "undefined"
+      ? document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("accessToken="))
+        ?.split("=")[1]
+      : null;
 
     return {
       headers: {
         ...prevContext.headers,
-        authorization: token ? `Bearer ${token}` : '',
+        authorization: token ? `Bearer ${token}` : "",
       },
     };
   });
+
 
   const apolloClient = new ApolloClient({
     defaultOptions: {
@@ -107,21 +109,6 @@ export function createClient(
     ...options,
     link: ApolloLink.from([authLink, errorLink, httpLink]),
   });
-
-  // Quando integrar com seu sistema de session
-  // session.onSignOut(() => {
-  //   apolloClient.clearStore();
-  // });
-
-  // Por enquanto, você pode usar um listener simples
-  if (typeof window !== 'undefined') {
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'token' && !e.newValue) {
-        // Token foi removido, limpa o cache
-        apolloClient.clearStore();
-      }
-    });
-  }
 
   return apolloClient;
 }

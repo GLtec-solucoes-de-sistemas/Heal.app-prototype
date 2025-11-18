@@ -1,0 +1,11 @@
+fragment BaseLogin on Authorization {
+  accessToken
+  refreshToken
+  type
+  user {
+    id
+    email
+    name
+    role
+  }
+}

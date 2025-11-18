@@ -2,8 +2,8 @@
 
 import { Pencil, Trash } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useModal } from "../contexts/ModalContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useModal } from "@/contexts/ModalContext";
 
 type ConsultationActionsProps = {
   id?: string;

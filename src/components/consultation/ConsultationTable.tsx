@@ -26,19 +26,19 @@ export const ConsultationTable = ({
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow">
       {loading ? (
-        <p className="text-white p-4">Carregando consultas...</p>
+        <p className="text-black p-4">Carregando consultas...</p>
       ) : (
-        <table className="min-w-full table-auto border-collapse text-sm text-white">
-          <thead className="bg-[#2A2A2A] text-gray-300">
+        <table className="min-w-full table-auto border-collapse text-sm text-black bg-white">
+          <thead className="bg-white text-black">
             <tr>
-              <th scope="col" className="px-4 py-2 text-center">Paciente</th>
-              <th scope="col" className="px-4 py-2 text-center">CPF</th>
-              <th scope="col" className="px-4 py-2 text-center">Profissional</th>
-              <th scope="col" className="px-4 py-2 text-center">Telefone</th>
-              <th scope="col" className="px-4 py-2 text-center">Tipo de Consulta</th>
-              <th scope="col" className="px-4 py-2 text-center">Data</th>
-              <th scope="col" className="px-4 py-2 text-center">Horário</th>
-              <th scope="col" className="px-4 py-2 text-center">Status</th>
+              <th scope="col" className="px-4 py-3 text-start">Data Consulta</th>
+              <th scope="col" className="px-4 py-3 text-start">Nome do Paciente</th>
+              <th scope="col" className="px-4 py-3 text-start">CPF</th>
+              <th scope="col" className="px-4 py-3 text-start">Profissional de Saúde</th>
+              <th scope="col" className="px-4 py-3 text-start">Telefone</th>
+              <th scope="col" className="px-4 py-3 text-start">Tipo de Consulta</th>
+              <th scope="col" className="px-4 py-3 text-start">Hora da Consulta</th>
+              <th scope="col" className="px-4 py-3 text-start">Status</th>
               <ConsultationActions isHeader />
             </tr>
           </thead>
@@ -62,17 +62,17 @@ export const ConsultationTable = ({
                 });
 
                 return (
-                  <tr key={id} className="even:bg-[#1F1F1F] odd:bg-[#141414]">
-                    <td className="px-4 py-2 text-center">{patientName}</td>
-                    <td className="px-4 py-2 text-center">{formatCPF(document)}</td>
-                    <td className="px-4 py-2 text-center">{professionalName}</td>
-                    <td className="px-4 py-2 text-center">{formatPhone(phoneNumber)}</td>
-                    <td className="px-4 py-2 text-center">{consultationType}</td>
-                    <td className="px-4 py-2 text-center">{formattedDate}</td>
-                    <td className="px-4 py-2 text-center">{formattedTime}</td>
-                    <td className="px-4 py-2 text-center">
+                  <tr key={id} className="bg-white text-black">
+                    <td className="px-4 py-3 text-start">{formattedDate}</td>
+                    <td className="px-4 py-3 text-start">{patientName}</td>
+                    <td className="px-4 py-3 text-start">{formatCPF(document)}</td>
+                    <td className="px-4 py-3 text-start">{professionalName}</td>
+                    <td className="px-4 py-3 text-start">{formatPhone(phoneNumber)}</td>
+                    <td className="px-4 py-3 text-start">{consultationType}</td>
+                    <td className="px-4 py-3 text-start">{formattedTime}</td>
+                    <td className="px-4 py-3 text-start">
                       <span
-                        className={`min-w-[110px] text-center px-2 py-1 rounded-2xl text-xs font-medium inline-block ${statusStyles[status]}`}
+                        className={`min-w-[110px] text-start px-2 py-1 rounded-2xl text-xs font-medium inline-block ${statusStyles[status]}`}
                       >
                         {status}
                       </span>
