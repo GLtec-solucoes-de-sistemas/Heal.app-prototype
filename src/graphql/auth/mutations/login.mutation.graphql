@@ -1,0 +1,5 @@
+mutation Login($payload: LoginInput!){
+    login(payload: $payload){
+        ...BaseLogin
+    }
+}

@@ -4,7 +4,7 @@ export type ConsultationStatus =
   | "Aguardando"
   | "Confirmação Pendente";
 
-export type Consultation = {
+export interface Consultation {
   id: string;
   consultationDate: string;
   consultationType: string;

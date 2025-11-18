@@ -3,6 +3,37 @@ schema {
   mutation: Mutation
 }
 
+type Authorization {
+  accessToken: String!
+  refreshToken: String
+  type: String!
+  user: User!
+}
+
+input AuthorizeInput {
+  userId: ID!
+}
+
+type ConsultationType {
+  """Data de criação"""
+  createdAt: DateTime!
+  """Data que o tipo de consulta foi deletado"""
+  deletedAt: DateTime
+  """ID do healthcare_user"""
+  healthcareUserId: ID!
+  id: ID!
+  """Nome do tipo de consulta"""
+  slugName: String!
+  """Data de modificação"""
+  updatedAt: DateTime!
+}
+
+input CreateConsultationTypeInput {
+  defaultPrice: Float!
+  healthcareUserId: ID!
+  slugName: String!
+}
+
 input CreateUserInput {
   email: String!
   name: String!
@@ -15,12 +46,27 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+input LoginInput {
+  email: String!
+  password: String!
+}
+
 type Mutation {
+  authorize(payload: AuthorizeInput!): Authorization!
+  createConsultationType(payload: CreateConsultationTypeInput!): ConsultationType!
   createUser(payload: CreateUserInput!): User!
+  login(payload: LoginInput!): Authorization!
+  updateConsultationType(id: ID!, payload: UpdateConsultationTypeInput!): ConsultationType!
 }
 
 type Query {
   hello: String!
+  me: User!
+}
+
+input UpdateConsultationTypeInput {
+  defaultPrice: Float
+  slugName: String
 }
 
 type User {
@@ -45,4 +91,5 @@ type User {
 enum UserRole {
   admin
   healthcare
+  secretary
 }

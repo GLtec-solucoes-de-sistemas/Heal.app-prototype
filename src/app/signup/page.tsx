@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import loginPage from "../../../public/loginPage.svg";
 import loginTitle from "../../../public/loginTitle.svg";
-import { SignupForm } from "@/components/SignUpForm";
+import { SignupForm } from "@/components/form/SignUpForm";
 
 const CreateAccount = () => {
   const router = useRouter();

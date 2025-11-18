@@ -2,7 +2,7 @@
 
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation, ConsultationStatus } from "@/models/consultation";
-import { Modal } from "../Modal";
+import { Modal } from "./Modal";
 import { formatCPF, formatPhone } from "@/utils/formatters";
 
 type ConfirmAppointmentModalProps = {

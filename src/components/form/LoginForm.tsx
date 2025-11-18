@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Mail, Lock, Eye, EyeOff, Variable } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { toast } from "sonner";
+import { getUserFromToken } from "@/utils/getUserFromToken";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMutation } from "@apollo/client/react";
+import { LoginDocument } from "@/graphql/generated/graphql";
 
-type FormData = {
+interface FormData {
   email: string;
   password: string;
 };
@@ -19,30 +22,54 @@ export const LoginForm = ({ onForgotPassword }: { onForgotPassword: () => void }
     formState: { errors },
   } = useForm<FormData>();
 
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-
+  const { setUser } = useAuth();
+  const [loginMutate] = useMutation(LoginDocument);
+  const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      const { user } = await signInWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
+  const [loading, setLoading] = useState(false);
 
-      const idToken = await user.getIdToken(true);
-      router.push("/dashboard");
-      return idToken;
-    } catch (err) {
-      if (err instanceof Error) {
-        console.error("Erro ao fazer login:", err.message);
-      } else {
-        console.error("Erro desconhecido:", err);
+  const onSubmit = async (formData: FormData) => {
+    try {
+      setLoading(true);
+
+      // const { data: dataMutation } = await loginMutate({
+      //   variables: {
+      //     payload: {
+      //       email: formData.email,
+      //       password: formData.password
+      //     }
+      //   }
+      // });
+
+      // console.log(dataMutation);
+
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error("E-mail ou senha inválidos");
+        
+        return;
       }
+
+      const user = getUserFromToken(data.accessToken);
+
+      setUser(user);
+
+      router.replace("/");
+    } catch(error) {
+      toast.error(`Erro ao logar: ${error}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,6 +77,7 @@ export const LoginForm = ({ onForgotPassword }: { onForgotPassword: () => void }
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="w-full max-w-[400px] space-y-6 font-sans text-sm"
+      noValidate
     >
       <div className="space-y-1">
         <div className="relative h-[42px]">
@@ -106,10 +134,13 @@ export const LoginForm = ({ onForgotPassword }: { onForgotPassword: () => void }
 
       <button
         type="submit"
-        className="w-full bg-[#009388] hover:bg-[#00796d] text-white py-2 rounded-md font-medium transition-colors cursor-pointer"
+        disabled={loading}
+        className={`w-full bg-[#009388] hover:bg-[#00796d] text-white py-2 rounded-md font-medium transition-colors cursor-pointer
+    ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        Entrar
+        {loading ? "Entrando..." : "Entrar"}
       </button>
+
     </form>
   );
 };

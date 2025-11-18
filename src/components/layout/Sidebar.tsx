@@ -4,8 +4,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { Home, CalendarHeart, Columns3Cog, LifeBuoy } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import sidebarIcon from "../../public/sidebarIcon.svg";
-import subSidebarIcon from "../../public/subSidebarIcon.svg";
+import sidebarIcon from "../../../public/sidebarIcon.svg"
+import subSidebarIcon from "../../../public/subSidebarIcon.svg";
 
 interface SidebarProps {
   open: boolean;
@@ -45,7 +45,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
 
   const items = [
     { label: "Início", icon: Home, path: "/dashboard" },
-    { label: "Consultas Marcadas", icon: CalendarHeart, path: "/" },
+    { label: "Consultas Marcadas", icon: CalendarHeart, path: "/consultation" },
     { label: "Gestão e Métricas", icon: Columns3Cog, path: "/dashboard/gestao" },
     { label: "Central de Ajuda", icon: LifeBuoy, path: "/dashboard/ajuda" },
   ];

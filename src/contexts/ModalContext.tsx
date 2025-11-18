@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useState, ReactNode, JSX } from "react";
 import { Consultation, ConsultationStatus } from "@/models/consultation";
 
-import { ModalAddMedicalConsultation } from "@/components/modals/ModalAddMedicalConsultation";
-import { ModalEditMedicalConsultation } from "@/components/modals/ModalEditMedicalConsultation";
-import { ConfirmModal } from "@/components/modals/ConfirmModal";
-import { ConfirmAppointmentModal } from "@/components/modals/ConfirmAppointmentModal";
+import { ModalAddMedicalConsultation } from "@/components/modal/ModalAddMedicalConsultation";
+import { ModalEditMedicalConsultation } from "@/components/modal/ModalEditMedicalConsultation";
+import { ConfirmModal } from "@/components/modal/ConfirmModal";
+import { ConfirmAppointmentModal } from "@/components/modal/ConfirmAppointmentModal";
 
 enum ModalOptionsEnum {
   create = "CREATE",

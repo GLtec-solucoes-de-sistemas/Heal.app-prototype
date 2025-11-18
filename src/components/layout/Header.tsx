@@ -15,7 +15,7 @@ export const Header = ({ sidebarOpen, isMobile, setSidebarOpen }: HeaderProps) =
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const routeName = pathname.split("/").filter(Boolean).pop() || "Consultas marcadas";
+  const routeName = pathname.split("/consultations").filter(Boolean).pop() || "Consultas marcadas";
   const formattedRoute =
     routeName.charAt(0).toUpperCase() + routeName.slice(1).replace(/-/g, " ");
 

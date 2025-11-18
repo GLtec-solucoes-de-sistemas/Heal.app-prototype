@@ -1,24 +1,20 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { ConsultationTable } from "@/components/ConsultationTable";
-import { ConsultationFilters } from "@/components/ConsultationFilters";
+import { ConsultationTable } from "@/components/consultation/ConsultationTable";
+import { ConsultationFilters } from "@/components/consultation/ConsultationFilters";
 import { useModal } from "@/contexts/ModalContext";
 import { Consultation } from "@/models/consultation";
-import { useRouter } from "next/navigation";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import DashboardLayout from "./dashboard/layout";
+import DashboardLayout from "../dashboard/layout";
 import { CirclePlus, HeartPulse, Sliders } from "lucide-react";
-import { SearchInput } from "@/components/SearchInput";
-import { RowsPerPageSelector } from "@/components/RowsPerPageSelector";
-import { ConsultationCalendar } from "@/components/ConsultationCalendar";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { RowsPerPageSelector } from "@/components/ui/RowsPerPageSelector";
+import { ConsultationCalendar } from "@/components/consultation/ConsultationCalendar";
 
 export default function ConsultationsPage() {
   const { onAdd } = useModal();
   const { logout, loading, user } = useAuth();
-  const router = useRouter();
 
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -35,57 +31,24 @@ export default function ConsultationsPage() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  useEffect(() => {
-    const consultationsRef = collection(db, "consultations");
-
-    const unsubscribe = onSnapshot(
-      consultationsRef,
-      (snapshot) => {
-        const consultationsData = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            consultationType: data.consultationType ?? "",
-            document: data.document ?? "",
-            email: data.email ?? "",
-            patientName: data.patientName ?? "",
-            phoneNumber: data.phoneNumber ?? "",
-            professionalName: data.professionalName ?? "",
-            consultationDate:
-              data.consultationDate?.toDate?.().toISOString() ?? "",
-            status: data.status ?? "Pendente",
-          };
-        });
-        setConsultations(consultationsData);
-        setIsLoadingData(false);
-      },
-      (error) => {
-        console.error("Erro ao escutar consultas:", error);
-        setIsLoadingData(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
   const filteredConsultations = useMemo(() => {
     return consultations
       .filter((consultation) => {
         const matchesSearch = searchQuery
           ? consultation.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            consultation.consultationType.toLowerCase().includes(searchQuery.toLowerCase())
+          consultation.consultationType.toLowerCase().includes(searchQuery.toLowerCase())
           : true;
 
         const matchesName = filters.patientName
           ? consultation.patientName
-              .toLowerCase()
-              .includes(filters.patientName.toLowerCase())
+            .toLowerCase()
+            .includes(filters.patientName.toLowerCase())
           : true;
 
         const matchesCpf = filters.cpf
           ? consultation.document
-              .replace(/\D/g, "")
-              .includes(filters.cpf.replace(/\D/g, ""))
+            .replace(/\D/g, "")
+            .includes(filters.cpf.replace(/\D/g, ""))
           : true;
 
         const matchesDate = (() => {
@@ -108,14 +71,14 @@ export default function ConsultationsPage() {
 
         const matchesConsultationType = filters.consultationType
           ? consultation.consultationType
-              .toLowerCase()
-              .includes(filters.consultationType.toLowerCase())
+            .toLowerCase()
+            .includes(filters.consultationType.toLowerCase())
           : true;
 
         const matchesProfessionalName = filters.professionalName
           ? consultation.professionalName
-              .toLowerCase()
-              .includes(filters.professionalName.toLowerCase())
+            .toLowerCase()
+            .includes(filters.professionalName.toLowerCase())
           : true;
 
         return (
@@ -130,6 +93,8 @@ export default function ConsultationsPage() {
       })
       .slice(0, rowsPerPage);
   }, [consultations, filters, searchQuery, rowsPerPage]);
+
+  if (loading) return <p className="p-6 text-white">Carregando...</p>;
 
   return (
     <DashboardLayout>
@@ -172,7 +137,7 @@ export default function ConsultationsPage() {
                 onClick={() => setIsFilterModalOpen(true)}
                 className="flex items-center border text-black border-[#09121C1A] px-4 py-2 rounded text-sm"
               >
-                <Sliders className="mr-2 w-5 h-5 text-[#09121C]"/>
+                <Sliders className="mr-2 w-5 h-5 text-[#09121C]" />
                 Filtrar
               </button>
               <RowsPerPageSelector
@@ -184,7 +149,7 @@ export default function ConsultationsPage() {
 
           {isFilterModalOpen && (
             <div className="fixed top-4 right-4 z-50 w-[350px] bg-white rounded-lg p-4">
-              
+
               <ConsultationFilters filters={filters} setFilters={setFilters} />
               <div className="flex justify-end mt-4 gap-2">
                 <button

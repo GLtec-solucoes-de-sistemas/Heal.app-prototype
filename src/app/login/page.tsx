@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { LoginForm } from "@/components/LoginForm";
-import { ForgotPasswordForm } from "@/components/ForgotPasswordForm";
-import { CreateAccount } from "@/components/CreateAccount";
+import { LoginForm } from "@/components/form/LoginForm";
+import { ForgotPasswordForm } from "@/components/form/ForgotPasswordForm";
+import { CreateAccount } from "@/components/auth/CreateAccount";
 import Image from "next/image";
 import loginPage from "../../../public/loginPage.svg";
 import loginTitle from "../../../public/loginTitle.svg";
@@ -18,27 +18,27 @@ const LoginPage = () => {
   const [view, setView] = useState<ViewState>("login");
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace("/dashboard");
-    }
-  }, [user, loading, router]);
+    if (user && !loading) router.replace("/dashboard");
+  }, [user, router]);
 
-  if (loading || user) return <p className="p-6 text-white">Redirecionando...</p>;
+  if (loading) {
+    return <p className="p-6 text-white">Carregando...</p>;
+  }
 
   const renderTitle = () => {
     return view === "login"
       ? "Fazer login"
       : view === "forgot"
-      ? "Redefinir senha"
-      : "";
+        ? "Redefinir senha"
+        : "";
   };
 
   const renderSubtitle = () => {
     return view === "login"
       ? "Seja bem-vindo(a)! Insira seu e-mail e senha para entrar em sua conta."
       : view === "forgot"
-      ? "Informe seu e-mail e enviaremos um link para redefinir sua senha."
-      : "";
+        ? "Informe seu e-mail e enviaremos um link para redefinir sua senha."
+        : "";
   };
 
   return (

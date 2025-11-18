@@ -4,7 +4,7 @@ import { useState } from "react";
 import Calendar, { CalendarProps } from "react-calendar";
 import { format, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import "../styles/calendar-custom.css";
+import "../../styles/calendar-custom.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type ConsultationCalendarProps = {
